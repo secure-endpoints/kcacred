@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>Managing Configuration for Identities</title>
+<link rel="stylesheet" type="text/css" href="kcaplugin.css" />
+<object type="application/x-oleobject"
+        classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+  <param name="Keyword" value="Configuration">
+  <param name="Keyword" value="Per-identity">
+  <param name="Keyword" value="Global">
+  <param name="Keyword" value="Options">
+</object>
+</head>
+
+<body>
+<h1>Managing Kerberized Certificate Authority Configurations for Network Identities</h1>
+
+<p>The settings specified when obtaining a KCA certificate for an
+identity are saved and will be reused the next time new credentials
+are obtained for the same identity.  In addition to that, you can
+specify default settings that will be used with any new identity
+(i.e. an identity for which you haven't specified KCA settings for).
+These settings can be viewed and changed via the Network Identity
+Manager configuration panels (accessible via the <span
+class="pre">Options</span> -> <span class="pre">Identities...</span>
+menu item).
+</p>
+
+<p>The KCA Certificate settings for an identity are identical to the
+settings available via the advanced view of the <b>Obtain New
+Credentials</b> dialog (as shown in the <a
+href="newcreds.html">Obtaining new credentials</a> topic).
+</p>
+
+<p>
+<img src="images/identcfg.png" />
+</p>
+
+<p class="caption"><span class="title">Figure 1:</span> Identity
+Configuration showing the KCA Certificates options panel</p>
+
+<p>The Kerberized Certificate Authority provider can obtain kerberized
+certificates from multiple Kerberos realms for a single network
+identity.
+
+<h3><a name="enable"></a>Enabling Certificate acquisition</h3>
+
+<p>The <b>Obtain KCA certificates for this identity</b> checkbox is
+used to determine if KCA Certificates will be obtained for the current
+identity.</p>
+
+<h3><a name="view"></a>Viewing the list of Kerberos Realms from which
+KCA Certificates will be obtained</h3>
+
+<p>A table view of the configured Kerberos Realms is
+provided.&nbsp;&nbsp; For each realm, either a list of KCA servers is
+provided or the word &quot;(Automatic)&quot;.&nbsp;
+&quot;(Automatic)&quot; is used to indicate that the KCA provider will
+obtain the list of KCA servers for the realm by querying the Domain
+Name System.</p>
+
+<h3><a name="adding"></a>Adding a KCA Certificate</h3>
+
+<p>To add a new KCA Certificate to the for this identity.&nbsp; Enter
+the Kerberos Realm name in the <b>Realm</b> text field and
+(optionally) provide a list of KCA servers to be used for the
+specified Kerberos realm.&nbsp; If no server list is specified, the
+KCA provider will determine the KCA server list automatically by
+querying the Domain Name System.&nbsp; (DNS SRV record locators are
+used.)&nbsp; When specifying a KCA server list, enter each server name
+separated by spaces.&nbsp; For example, if the list of KCA servers is
+<span class="pre">kca1.example.com</span>, <span
+class="pre">kca2.example.com</span> and <span
+class="pre">kca3.example.com</span>, then you would enter:
+</p>
+
+<pre>host1.example.com host2.example.com host3.example.com</pre>
+
+<p>in the <b>KCA servers to use</b> text field.</p>
+
+<p>To complete the process of adding the KCA Certificate, press the
+<b> Add/Update</b> button.</p>
+
+<h3><a name="update"></a>Updating a KCA Certificate</h3>
+
+<p>Select the Kerberos realm in the table, edit the KCA server list,
+and press the <b>Add/Update</b> button.</p>
+
+<h3><a name="remove"></a>Removing a KCA Certificate</h3>
+
+<p>Select the Kerberos realm in the table and press the <b>Remove</b>
+button.</p>
+
+<h3><a name="global"></a>Setting the Global Default for Kerberized
+Certificate Acquisition</h3>
+
+<p>A global default for Kerberized Certificate Authority certificate
+acquisition can be specified.&nbsp; When enabled, new Network
+Identities will automatically be configured to obtain a Kerberized
+Certificate from the identity's Kerberos realm.</p>
+
+<p>
+<img src="images/globalcfg.png" />
+</p>
+
+<p class="caption"><span class="title">Figure 2:</span> Global
+Identity Configuration showing the KCA Certificates options panel</p>
+
+</body>
+</html>

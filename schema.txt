@@ -1,0 +1,111 @@
+
+
+Schema for the KCA plug-in:
+
+Plug-in global settings
+-----------------------
+
+Location: <plugin-config>/Parameters
+
+
+Per-realm settings
+------------------
+
+(Note: the per-realm settings are chosen based on the identity realm.)
+
+Location: <plugin-config>/Parameters/Realms/<realm>
+
+KCAEnabled, int32, 1
+
+    Boolean value.  If non-zero, obtains credentials for this realm.
+
+NCerts, int32, 0
+
+    Number of certificates that should be acquired for this identity.
+
+Cert_<n>, string, ""
+
+    Certificate number <n>, where <n> ranges from 0 to (NCerts - 1).
+    Each string takes the form "realm=<realm>,hosts=<hosts>".
+
+    - If the "realm=" setting is "[Identity]" then the identity realm
+      will be used.
+
+    - If "hosts=" setting is "[Automatic]", then the hosts will be
+      determined automatically based on the specified realm.
+      Otherwise, the list of hosts should be specified as a space
+      separated list.
+
+    If more than one string specifies a certificate for a realm, then
+    only the first setting will be effective.
+
+Legacy Per-realm settings
+-------------------------
+
+KCAHosts, string, ""
+
+    String value.  Space separated list of KCA hosts to use.
+
+KCARealm, string, ""
+
+    String value.  Specifies the realm to use if KCAHostMethod is 2.
+
+KCAHostMethod, int32, 0
+
+    Method for determining KCA hosts. Currently, 0 means determine
+    hosts automatically based on the identity realm (in which case
+    'KCAHosts' value is ignored).  1 means use the 'KCAHosts' value,
+    and enables specifying host list manually.  2 means determine
+    hosts automatically based on the realm specified in the KCARealm
+    value.
+
+Identity settings
+-----------------
+
+Location: (global) <plugin-config>/Parameters
+Location: (id specific) <identity-config>/KCACert
+
+KCAEnabled, int32, 1
+
+    Boolean value.  If non-zero, obtains credentials for this
+    identity.
+
+NCerts, int32, 0
+
+    Number of certificates that should be acquired for this identity.
+
+Cert_<n>, string, ""
+
+    Certificate number <n>, where <n> ranges from 0 to (NCerts - 1).
+    Each string takes the form "realm=<realm>,hosts=<hosts>".
+
+    - If the "realm=" setting is "[Identity]" then the identity realm
+      will be used.
+
+    - If "hosts=" setting is "[Automatic]", then the hosts will be
+      determined automatically based on the specified realm.
+      Otherwise, the list of hosts should be specified as a space
+      separated list.
+
+    If more than one string specifies a certificate for a realm, then
+    only the first setting will be effective.
+
+Legacy Identity Settings
+------------------------
+
+KCAHosts, string, ""
+
+    String value.  Space separated list of KCA hosts to use.
+
+KCARealm, string, ""
+
+    String value.  Specifies the realm to use if KCAHostMethod is 2.
+
+KCAHostMethod, int32, 0
+
+    Method for determining KCA hosts. Currently, 0 means determine
+    hosts automatically based on the identity realm (in which case
+    'KCAHosts' value is ignored).  1 means use the 'KCAHosts' value,
+    and enables specifying host list manually. 2 means determine hosts
+    automatically based on the realm specified in the KCARealm value.
+

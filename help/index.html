@@ -1,0 +1,75 @@
+<html>
+<head>
+<title>Kerberized Certificate Authority Provider for Network Identity Manager</title>
+<link rel="stylesheet" type="text/css" href="kcaplugin.css">
+<object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+  <param name="Keyword" value="Introduction">
+  <param name="Keyword" value="Kerberized Certificate Authority">
+  <param name="Keyword" value="Network Identity Manager">
+</object>
+</head>
+
+<body>
+<h1>Kerberized Certificate Authority Provider for Network Identity Manager</h1>
+
+<p>The Kerberized Certificate Authority Provider for Network Identity Manager provides the ability
+for Network Identity Manager to obtain and manage KCA certificates.
+</p>
+
+<p>The installation package includes the KCA Provider for Network
+Identity Manager (<span class="pre">kcacred.dll</span>) as well as an
+PKCS #11 module which can be used with the Mozilla family of products
+(<span class="pre">kpkcs11.dll</span>) that exposes the Windows
+&quot;My Certificates&quot; store.  Instructions for installing the
+PKCS #11 module can be found <a href="instkpkcs11.html">here</a>.
+</p>
+
+<p>During normal operation, the KCA provider for Network Identity
+Manager will obtain new KCA certificates (as configured during the <a
+href="newcreds.html">new credentials acquisition process</a>) and
+place them in the Windows certificate store.  Once placed there,
+applications that use certificates from this store will be able to use
+the KCA certificates.  However, the Mozilla family of products
+requires the <a href="instkpkcs11.html">installation</a> of the PKCS
+#11 module to be able to use these certificates.
+</p>
+
+<h3>Using the Kerberized Certificate Authority Provider</h3>
+
+<p>
+<ul>
+  <li><a href="newcreds.html">Obtaining new KCA certificates</a></li>
+  <li><a href="config.html">Managing configuration for identities</a></li>
+  <li><a href="instkpkcs11.html">Installing the PKCS #11 module for Mozilla products</a></li>
+</ul>
+</p>
+
+<a name="license" />
+<h3>Legal information</h3>
+
+<p>Click <a href="license.html">here</a> for license and legal information.
+</p>
+
+<a name="contact" />
+<h3>Feedback</h3>
+
+<p>Bug reports and feature requests should be sent to <a
+href="mailto:kca@secure-endpoints.com">kca@secure-endpoints.com</a>.
+For bug reports, please include as much information as possible,
+including the version of Kerberos for Windows, version of the KCA
+provider and if relevant, the version of the PKCS #11 module.  In
+addition, please include steps for reproducing the problem.
+</p>
+
+<a name="links" />
+<h3>External Links</h3>
+
+<p>
+<ul>
+  <li><a href="http://www.kx509.org/">UMICH KX.509</a></li>
+  <li><a href="http://www.secure-endpoints.com/">Secure Endpoints Inc.</li>
+</ul>
+</p>
+
+</body>
+</html>

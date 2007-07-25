@@ -1,0 +1,302 @@
+<html>
+<head>
+<title>Registry settings</title>
+<link rel="stylesheet" type="text/css" href="kcaplugin.css">
+<object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+  <param name="Keyword" value="Registry">
+  <param name="Keyword" value="Registry settings">
+  <param name="Keyword" value="KCAEnabled">
+  <param name="Keyword" value="NCerts">
+  <param name="Keyword" value="Cert_n">
+  <param name="Keyword" value="realm">
+  <param name="Keyword" value="[Automatic]">
+  <param name="Keyword" value="[Identity]">
+</object>
+</head>
+
+<body>
+
+<h1>Registry Settings</h1>
+
+<p>
+    Following the conventions used by Network Identity Manager, the
+    settings for the KCA provider are maintained in the user and
+    machine registry hives.  The layout of the settings is identical
+    in both the user and machine hives.  User settings override
+    machine settings.
+</p>
+
+<p>
+    When obtaining credentials for an identity, the settings are
+    looked-up from the following locations (in order):
+
+    <ul>
+    <li>Per-identity settings.</li>
+
+    <li>Per-realm settings.</li>
+
+    <li>Defaults for all identities.</li>
+    </ul>
+</p>
+
+<p>
+    For example, if credentials are being obtained for the Kerberos
+    principal user@EXAMPLE.COM, locations that settings will be
+    searched for are :
+
+    <ul>
+    <li>
+    <p>Per identity settings for <em>user@EXAMPLE.COM</em>.</p>
+
+    <p>(<span class="regkey">HKCU,HKLM\Software\MIT\NetIDMgr\KCDB\Identity\user@EXAMPLE.COM\KCACred</span>)</p>
+    </li>
+
+    <li>
+    <p>Per-realm settings for <em>EXAMPLE.COM</em>.</p>
+
+    <p>(<span class="regkey">HKCU, HKLM\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters\Realms\EXAMPLE.COM</span>)</p>
+    </li>
+
+    <li>
+    <p>Global defaults.</p>
+
+    <p>(<span class="regkey">HKCU, HKLM\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters</span>)</p>
+    </li>
+    </ul>
+</p>
+
+
+<h3>Plug-in global settings</h3>
+
+<p>
+    Location :
+    <table>
+    <tr><td>(user)</td><td><span class="regkey">HKCU\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters</span></td></tr>
+    <tr><td>(machine)</td><td><span class="regkey">HKLM\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters</span></td></tr>
+    </table>
+</p>
+
+<p>
+    This location contains the settings that control the overall
+    behavior of the provider.  These settings will be applied to any
+    identity for which there is no per-identity or applicable
+    per-realm configuration settings.
+</p>
+
+    <h4>Values</h4>
+
+    <p>
+      <span class="vname">KCAEnabled</span> <span class="vtype">(DWORD)</span>
+
+      <p class="indent">Boolean value.  Obtains KCA certificates if
+      non-zero.  If no certificates are specified for an identity,
+      then the plug-in will attempt to obtain a certificate for the
+      identity realm.</p>
+    </p>
+
+<h3>Per-realm settings</h3>
+
+<p>
+    Per-realm settings are chosen based on the realm of the identity
+    principal.  They are only effective if no per-identity settings
+    are specified.
+</p>
+
+<p>
+    Location:
+    <table>
+    <tr><td>(user)</td><td><span class="regkey">HKCU\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters\Realms\<em>&lt;realm&gt;</em></span></td></tr>
+    <tr><td>(machine)</td><td><span class="regkey">HKLM\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters\Realms\<em>&lt;realm&gt;</em></span></td></tr>
+    </table>
+</p>
+
+    <h4>Values</h4>
+
+    <p><span class="vname">KCAEnabled</span> <span class="vtype">(DWORD)</span>
+
+        <p class="indent">Boolean value.  If non-zero, obtains
+        credentials for this realm.</p>
+        </p>
+
+    <p><span class="vname">NCerts</span> <span class="vtype">(DWORD)</span>
+
+        <p class="indent">An integer.  Specifies the number of
+        certificates that must be obtained for this realm.
+        </p>
+
+        <p class="indent">
+        </p>
+    </p>
+
+    <p><span class="vname">Cert_<em>n</em></span> <span class="vtype">(String)</span>
+
+        <p class="indent">Certificate number <em>n</em>, where
+        <em>n</em> ranges from <em>0</em> to <em>(NCerts - 1)</em>.
+        Each specified string will be of the following format:
+        </p>
+
+        <p class="indent"><span
+        class="pre">realm=&lt;realm&gt;,hosts=&lt;hosts&gt;</span>
+        </p>
+
+        <p class="indent">
+        <ul>
+
+           <li>
+             <p><span class="title">realm</span>: Specifies the realm
+             of the certificate. If the <span
+             class="vname">realm</span> setting is <span
+             class="vtpe">[Identity]</span>, then the realm of the
+             identity will be used.
+             </p>
+           </li>
+
+           <li>
+             <p><span class="title">hosts</span>: Specifies the list
+             of KCA hosts to use when obtaining the certificate. If
+             the <span class="vname">hosts</span> setting is <span
+             class="vtype">[Automatic]</span>, then the KCA hosts will
+             be determined automatically based on the specified realm.
+             Otherwise, the list of KCA hosts should be specified as a
+             space separated list.
+             </p>
+           </li>
+
+        </ul>
+        </p>
+
+        <p class="indent">Note that only one certificate can be
+        specified for a given realm.  If more than one string
+        specifies certificates for given realm, then only the first
+        setting will be effective.
+        </p>
+
+        <p class="indent">The special tokens (<em>[Identity]</em> and
+        <em>[Automatic]</em> are case sensitive.
+        </p>
+
+        <p class="indent"><span class="title">E.g.:</span>
+            <p class="indent"><span class="vname">NCerts</span>: 2</p>
+            <p class="indent"><span class="vname">Cert_0</span>:
+            <span class="pre">realm=[Identity],hosts=[Automatic]</span></p>
+            <p class="indent"><span class="vname">Cert_1</span>:
+            <span class="pre">realm=EXAMPLE.COM,hosts=kca1.example.com kca2.example.com kca3.example.com</span></p>
+            <p class="indent">The set of registry values above declare two KCA
+            certificates.  The first certificate is for the realm of
+            the identity.  The KCA hosts will be determined
+            automatically.  The second certificate is for the realm
+            <em>EXAMPLE.COM</em>.  The certificate will be obtained
+            using the KCA hosts
+            <em>kca1.example.com</em>,<em>kca2.example.com</em> and
+            <em>kca3.example.com</em>.
+            </p>
+        </p>
+
+    </p>
+
+<a name="idsettings" />
+<h3>Per-identity settings</h3>
+
+
+<p>
+    Location: (identity-specific)
+    <table>
+    <tr><td>(user)</td><td><span class="pre">HKCU\Software\MIT\NetIDMgr\KCDB\Identity\&lt;identity name&gt;\KCACert</span></td></tr>
+    </table>
+</p>
+
+<p>
+    Location: (defaults for all identities)
+    <table>
+    <tr><td>(user)</td><td><span class="pre">HKCU\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters</span></td></tr>
+    <tr><td>(machine)</td><td><span class="pre">HKLM\SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Parameters</span><td></tr>
+    </table>
+</p>
+
+
+    <h4>Values</h4>
+
+    <p><span class="pre">KCAEnabled</span> <i>(DWORD)</i>
+
+        <p class="indent">Boolean value.  If non-zero, obtains
+        credentials for this identity.</p>
+        </p>
+
+    <p><span class="vname">NCerts</span> <span class="vtype">(DWORD)</span>
+
+        <p class="indent">An integer.  Specifies the number of
+        certificates that must be obtained for this realm.
+        </p>
+
+        <p class="indent">
+        </p>
+    </p>
+
+    <p><span class="vname">Cert_<em>n</em></span> <span class="vtype">(String)</span>
+
+        <p class="indent">Certificate number <em>n</em>, where
+        <em>n</em> ranges from <em>0</em> to <em>(NCerts - 1)</em>.
+        Each specified string will be of the following format:
+        </p>
+
+        <p class="indent"><span
+        class="pre">realm=&lt;realm&gt;,hosts=&lt;hosts&gt;</span>
+        </p>
+
+        <p class="indent">
+        <ul>
+
+           <li>
+             <p><span class="title">realm</span>: Specifies the realm
+             of the certificate. If the <span
+             class="vname">realm</span> setting is <span
+             class="vtpe">[Identity]</span>, then the realm of the
+             identity will be used.
+             </p>
+           </li>
+
+           <li>
+             <p><span class="title">hosts</span>: Specifies the list
+             of KCA hosts to use when obtaining the certificate. If
+             the <span class="vname">hosts</span> setting is <span
+             class="vtype">[Automatic]</span>, then the KCA hosts will
+             be determined automatically based on the specified realm.
+             Otherwise, the list of KCA hosts should be specified as a
+             space separated list.
+             </p>
+           </li>
+
+        </ul>
+        </p>
+
+        <p class="indent">Note that only one certificate can be
+        specified for a given realm.  If more than one string
+        specifies certificates for given realm, then only the first
+        setting will be effective.
+        </p>
+
+        <p class="indent">The special tokens (<em>[Identity]</em> and
+        <em>[Automatic]</em> are case sensitive.
+        </p>
+
+        <p class="indent"><span class="title">E.g.:</span>
+            <p class="indent"><span class="vname">NCerts</span>: 2</p>
+            <p class="indent"><span class="vname">Cert_0</span>:
+            <span class="pre">realm=[Identity],hosts=[Automatic]</span></p>
+            <p class="indent"><span class="vname">Cert_1</span>:
+            <span class="pre">realm=EXAMPLE.COM,hosts=kca1.example.com kca2.example.com kca3.example.com</span></p>
+            <p class="indent">The set of registry values above declare two KCA
+            certificates.  The first certificate is for the realm of
+            the identity.  The KCA hosts will be determined
+            automatically.  The second certificate is for the realm
+            <em>EXAMPLE.COM</em>.  The certificate will be obtained
+            using the KCA hosts
+            <em>kca1.example.com</em>,<em>kca2.example.com</em> and
+            <em>kca3.example.com</em>.
+            </p>
+        </p>
+
+    </p>
+
+</body>
+</html>

@@ -1,0 +1,32 @@
+[OPTIONS]
+Auto Index=Yes
+Compatibility=1.1 or later
+Compiled file=kcaplugin.chm
+Contents file=toc.hhc
+Default topic=index.html
+Display compile progress=No
+Index file=Index.hhk
+Language=0x409 English (United States)
+Title=Kerberized Certificate Authority Provider for Network Identity Manager
+
+
+[FILES]
+index.html
+newcreds.html
+registry.html
+config.html
+instkpkcs11.html
+license.html
+
+[ALIAS]
+IDH_NC_CTX=newcreds.html
+
+[MAP]
+#include kcahelp.h
+
+[TEXT POPUPS]
+kcahelp.h
+ncpopups.txt
+
+[INFOTYPES]
+

@@ -1,0 +1,37 @@
+.topic IDH_NC_ENABLE
+
+KCA certificates as specified in the certificate list will be obtained
+when this is checked.
+
+.topic IDH_NC_CERTLIST
+
+The list of KCA certificates that will be obtained for this identity.
+You can select any of the certificates using the keyboard or mouse and
+then use the controls below to modify or remove it.
+
+.topic IDH_NC_REALM
+
+The Kerberos realm for the certificate.  Leave this blank to use the
+realm of the current identity.
+
+.topic IDH_NC_HOSTS
+
+The list of KCA hosts to use when obtaining KCA certificates.  The
+list must be separated by spaces.  Leave this blank to let the provider
+determine KCA hosts automatically.
+
+.topic IDH_NC_USEIDREALM
+
+If checked, the realm of this certificate will be set to the realm of
+the currently selected identity.
+
+.topic IDH_NC_ADDREALM
+
+Add or update the certificate being modified. If the certificate
+information corresponds to a certificate that is already listed, that
+certificate will be modified.  Otherwise, a new certificate will be
+added.
+
+.topic IDH_NC_DELREALM
+
+Delete the selected certificate from the certificate list.

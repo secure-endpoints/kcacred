@@ -1,0 +1,92 @@
+<html>
+<head>
+<title>Installing the PKCS #11 Module for Mozilla Products</title>
+<link rel="stylesheet" type="text/css" href="kcaplugin.css">
+<object type="application/x-oleobject" classid="clsid:1e2a7bd0-dab9-11d0-b93a-00c04fc99f9e">
+  <param name="Keyword" value="Mozilla">
+  <param name="Keyword" value="Firefox">
+  <param name="Keyword" value="PKCS #11">
+  <param name="Keyword" value='"My" Certificate Store'>
+  <param name="Keyword" value="kpkcs11.dll">
+</object>
+</head>
+
+<body>
+<h1>Installing the PKCS #11 Module for Mozilla Products</h1>
+
+<p>When you obtain a KCA certificate with the Kerberized Certificate 
+Authority Provider for Network
+Identity Manager, it places the certificate in the Windows "My"
+Certificate Store, which is the default location for storing personal
+certificates.  Applications that make use of the Windows certificate
+store will be able to immediately use the certificate.  However, the
+Mozilla family of products don't use the Windows certificate store by
+default.
+</p>
+
+<p>The KCA provider is bundled with a PKCS #11 module for Mozilla
+products that exposes the Windows certificate store.  This allows
+Mozilla products to use these certificates transparently.  At the
+current time, this module needs to be manually added to each Mozilla
+application that you would like to use with KCA certificates.  This
+page provides information for installing the module for various Mozilla products.
+</p>
+
+<p><span class="title">Note:</span> The PKCS #11 module exposes all
+the certificates in the Windows "My" certificate store, not just the
+KCA certificates.</p>
+
+<p>This document provides installation instructions for the following
+products:</p>
+
+<p><ul>
+
+  <li><a href="#firefox2">Mozilla Firefox version 2</a></li>
+
+</ul></p>
+
+<h3>Installing the PKCS #11 Module for Mozilla Firefox version 2</h3>
+
+<p><ol>
+
+<li><p>Select <span class="pre">Tools</span> -> <span
+class="pre">Options...</span> from the menu bar to access the Options
+dialog.</p></li>
+
+<li><p>Select the <span class="pre">Advanced</span> icon to access the
+advanced options pane.  (pictured below).
+
+<img src="images/firefox2-1.png" /> <p class="caption"><span
+class="title">Picture 1:</span> The advanced options dialog in Firefox
+2 with the <span class="pre">Encryption</span> tab selected.
+</p>
+</li>
+
+<li><p>Select the <span class="pre">Encryption</span> tab.
+</p></li>
+
+<li><p>Select the <span class="pre">Security Devices</span> button to
+access the security device manager (pictured below).
+
+<img src="images/firefox2-2.png" /> <p class="caption"><span
+class="title">Picture 2:</span> The Security Device Manager.</p>
+
+</p></li>
+
+<li><p>Select the <span class="pre">Load</span> button to load a new
+PKCS #11 device.</p></li>
+
+<li><p>Enter the details for the new PKCS #11 device as shown below.
+For the module filename, select <span class="pre">kpkcs11.dll</span>
+from the directory that you installed the KCA provider to. By default,
+this is in the <span class="pre">%PROGRAMFILES%\Secure Endpoints\KCA
+Plugin\</span> directory.
+</p>
+
+<img src="images/firefox2-3.png" />
+</li>
+
+</ol></p>
+
+</body>
+</html>

@@ -1,0 +1,273 @@
+#
+# Copyright (c) 2006 Secure Endpoints Inc.
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# Environment variables
+# ---------------------
+#
+# (paths should not end in a backslash)
+#
+# OPENSSLDIR: Path to installation of OpenSSL
+#
+# AUXCFLAGS : Auxilliary C flags to pass to the command line of CC
+#
+
+DLLBASENAME = kpkcs11
+
+AUXCFLAGS = /J /Zc:wchar_t /Zc:forScope /Gd /GR /Gy /GL	/FD /EHsc /O2 /Wp64 /errorReport:prompt
+
+# Version info
+
+!IFNDEF VERMAJOR
+VERMAJOR=0
+VERMINOR=5
+VERAUX  =0
+VERPATCH=0
+!ELSE
+# Check if we were given all the version info macros we need
+!  IF !DEFINED(VERMINOR) || !DEFINED(VERAUX) || !DEFINED(VERPATCH)
+!    ERROR
+!  ENDIF
+!ENDIF
+
+# Leave these as-is
+VERLIST=$(VERMAJOR).$(VERMINOR).$(VERAUX).$(VERPATCH)
+VERLISTC=$(VERMAJOR),$(VERMINOR),$(VERAUX),$(VERPATCH)
+
+# Various checks
+
+!ifndef OPENSSLDIR
+! error OPENSSLDIR environment variable not set.
+!endif
+
+# Directories
+
+BUILDROOT=.
+
+!ifdef NODEBUG
+BUILDTYPE=release
+!else
+BUILDTYPE=debug
+! ifndef DEBUG
+DEBUG=1
+! endif
+!endif
+
+
+!ifndef CPU
+!error Environment variable 'CPU' is not defined.
+!endif
+
+# Note that DEST has to point to the same directory as KPKCS11DEST in
+# ../Makefile
+
+DEST=$(BUILDROOT)\dest\$(CPU)_$(BUILDTYPE)
+OBJ=$(BUILDROOT)\obj\$(CPU)_$(BUILDTYPE)
+
+# Win32.mak
+
+!include <Win32.Mak>
+
+# Program macros
+
+CD=cd
+RM=del /q
+MKDIR=mkdir
+RMDIR=rmdir
+ECHO=echo
+CP=copy /y
+LINK=link
+MC=mc
+
+# Lots more macros
+
+incflags = -I"$(OPENSSLDIR)\include" -I"$(OBJ)" -I.
+rincflags = /i "$(OBJ)" /i .
+
+ldebug = $(ldebug) /DEBUG
+cdebug = $(cdebug) -Os -Zi
+
+cdefines = $(cdefines) -D_CRT_SECURE_NO_DEPRECATE -D_MBCS -D_USERDLL -DKPKCS11_EXPORTS
+
+!ifndef NO_WX
+cwarn=/WX
+!else
+cwarn=
+!endif
+
+C2OBJ=$(CC) $(cvarsdll) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS)  /Fo"$@" /c $**
+
+!ifdef DEBUG
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /OPT:NOWIN98 /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:X86 /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
+!else
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /OPT:NOWIN98 /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:X86 /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
+!endif
+
+DLLRESLINK=$(LINK) /NOLOGO /DLL /NOENTRY /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" $**
+
+RC2RES=$(RC) $(RFLAGS) $(rincflags) /fo "$@" $**
+
+MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
+
+{}.c{$(OBJ)}.obj:
+	$(C2OBJ)
+
+{$(OBJ)}.c{$(OBJ)}.obj:
+	$(C2OBJ)
+
+{}.rc{$(OBJ)}.res:
+	$(RC2RES)
+
+mkdirs::
+!if !exist($(DEST))
+	$(MKDIR) "$(DEST)"
+!endif
+!if !exist($(OBJ))
+	$(MKDIR) "$(OBJ)"
+!endif
+
+clean::
+	$(RM) "$(OBJ)\*.*"
+	$(RM) "$(DEST)\*.*"
+
+.SUFFIXES: .h
+
+#
+# Manifest handling
+#
+# Starting with Visual Studio 8, the C compiler and the linker
+# generate manifests so that the applications will link with the
+# correct side-by-side DLLs at run-time.  These are required for
+# correct operation under Windows XP.  We also have custom manifests
+# which need to be merged with the manifests that VS creates.
+#
+# The syntax for invoking the _VC_MANIFEST_EMBED_foo macro is:
+# $(_VC_MANIFEST_EMBED_???) <any additional manifests that need to be merged in>
+#
+
+!ifndef MT
+MT=mt.exe -nologo
+!endif
+
+_VC_MANIFEST_EMBED_EXE= \
+if exist "$@.manifest" $(MT) -outputresource:"$@";2 -manifest "$@.manifest"
+
+_VC_MANIFEST_EMBED_DLL=$(_VC_MANIFEST_EMBED_EXE)
+
+# Note that if you are merging manifests, then the VS generated
+# manifest should be cleaned up after calling _VC_MANIFEST_EMBED_???.
+# This ensures that even if the DLL or EXE is executed in-place, the
+# embedded manifest will be used.  Otherwise the $@.manifest file will
+# be used.
+_VC_MANIFEST_CLEAN= \
+if exist "$@.manifest" $(RM) "$@.manifest"
+
+# End of manifest handling
+
+# Now for the actual build stuff
+
+DLL=$(DEST)\$(DLLBASENAME).dll
+
+LIBFILES= 					\
+	user32.lib \
+	gdi32.lib \
+	crypt32.lib \
+	"$(OPENSSLDIR)\lib\libeay32.lib" 
+
+OBJFILES= \
+	$(OBJ)\b64.obj	\
+	$(OBJ)\blob_to_rsa.obj	\
+	$(OBJ)\cki_dup.obj		\
+	$(OBJ)\cki_err.obj	\
+	$(OBJ)\cki_funcs.obj	\
+	$(OBJ)\cki_globals.obj	\
+	$(OBJ)\cki_new_free.obj	\
+	$(OBJ)\cki_objs.obj	\
+	$(OBJ)\cki_ssleay.obj \
+	$(OBJ)\concat.obj \
+	$(OBJ)\cu_util.obj \
+	$(OBJ)\debug.obj \
+	$(OBJ)\doauth.obj \
+	$(OBJ)\pkcs11_evp_funcs.obj \
+	$(OBJ)\pkcs11_funcs.obj \
+	$(OBJ)\pkcs11_globals.obj \
+	$(OBJ)\pkcs11_new_free.obj
+
+DLLRESFILE=$(OBJ)\version.res
+
+CONFIGHEADER=$(OBJ)\pkcs_config.h
+
+all: mkdirs $(CONFIGHEADER) $(DLL) 
+
+$(CONFIGHEADER): NTMakefile
+	$(CP) << "$@"
+/* This is a generated file.  Do not modify directly. */
+
+#pragma once
+
+#define VERSION_MAJOR $(VERMAJOR)
+#define VERSION_MINOR $(VERMINOR)
+#define VERSION_AUX   $(VERAUX)
+#define VERSION_PATCH $(VERPATCH)
+
+#define VERSION_LIST  $(VERLIST)
+#define VERSION_LISTC $(VERLISTC)
+#define VERSION_STRING "$(VERLIST)"
+
+<<
+
+clean::
+	$(RM) $(CONFIGHEADER)
+
+$(DLL): $(OBJFILES) $(DLLRESFILE)
+	$(DLLGUILINK) $(LIBFILES)
+#	$(_VC_MANIFEST_EMBED_DLL)
+#	$(_VC_MANIFEST_CLEAN)
+
+clean::
+	$(RM) $(DLL)
+
+
+
+# Installer
+
+!ifdef DEBUG
+VERDEBUG=-debug
+!else
+VERDEBUG=
+!endif
+
+MSIFILE=$(DEST)\kpkcs11-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)$(VERDEBUG).msi
+
+msi: $(MSIFILE)
+
+$(MSIFILE): $(OBJ)\kpkcs11.wixobj
+	light -v0 -out $@ $**
+
+$(OBJ)\kpkcs11.wixobj: installer\kpkcs11.wxs $(DLL)
+	candle -v0 \
+	-dKPKCS11Version="$(VERLIST)" \
+	-dBinDir="$(DEST)" \
+	-out $@ installer\kpkcs11.wxs
+
+clean::
+	$(RM) $(MSIFILE)
