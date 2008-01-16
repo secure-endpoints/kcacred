@@ -168,10 +168,18 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
         if (dwErr == CRYPT_E_EXISTS) {
             log_printf("CertAddEncodedCertificateToStore returned CRYPT_E_EXISTS");
         } else if ((dwErr & CRYPT_E_OSS_ERROR) == CRYPT_E_OSS_ERROR) {
+            LPVOID l;
+
             log_printf("CertAddEncodedCertificateToStore returned CRYPT_E_OSS_ERROR"
-                       " with GetLastError() returning 0x%08x -- %s", dwErr, GetLastErrorText());
+                       " with GetLastError() returning 0x%08x -- %s", dwErr, (l = GetLastErrorText()));
+            if (l)
+                LocalFree(l);
         } else {
-            log_printf("CertAddEncodedCertificateToStore failed with 0x%08x -- ", dwErr, GetLastErrorText());
+            LPVOID l;
+
+            log_printf("CertAddEncodedCertificateToStore failed with 0x%08x -- ", dwErr, (l = GetLastErrorText()));
+            if (l)
+                LocalFree(l);
         }
 
         return 0;

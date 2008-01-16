@@ -57,6 +57,9 @@
 #include<netidmgr.h>
 #include<strsafe.h>
 
+void
+(*_log_external)(const char *) = NULL;
+
 void log_printf(char *fmt, ...) 
 { 
   char buffer[2048]; 
@@ -75,6 +78,9 @@ void log_printf(char *fmt, ...)
   _report_cs1(KHERR_DEBUG_1, L"%1!S!",
               _cstr(buffer));
   _resolve();
+
+  if (_log_external)
+      (*_log_external)(buffer);
  
   va_end(vargs); 
 } 

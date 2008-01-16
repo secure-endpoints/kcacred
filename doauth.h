@@ -86,3 +86,4 @@ store_key(BYTE *p, DWORD cbPk, wchar_t * container);
 
 int
 store_cert(BYTE *cert, DWORD len, wchar_t * container);
+

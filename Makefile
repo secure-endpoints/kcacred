@@ -158,6 +158,8 @@ DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFA
 
 DLLRESLINK=$(LINK) /NOLOGO /DLL /NOENTRY /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" $**
 
+EXECONLINK=$(LINK) /NOLOGO $(ldebug) $(conlflags) $(lndeflibflag) $(conlibsmt) /OUT:$@ $**
+
 RC2RES=$(RC) $(RFLAGS) $(rincflags) /fo "$@" $**
 
 MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
@@ -248,6 +250,7 @@ OBJFILES= \
 	$(OBJ)\config_ids.obj	\
 	$(OBJ)\pluginconfig.obj \
 	$(OBJ)\kpkcs11inst.obj  \
+	$(OBJ)\kcaexports.obj	\
 # kx509 stuff
 	$(OBJ)\b64.obj		\
 	$(OBJ)\debug.obj	\
@@ -401,3 +404,21 @@ $(OBJ)\kcaplugin.wixobj: installer\kcaplugin.wxs $(DLL) $(HELPFILE)
 
 clean::
 	$(RM) $(MSIFILE)
+
+# Tests
+
+{test}.c{$(OBJ)}.obj:
+	$(C2OBJ)
+
+TESTEXEOBJS=$(OBJ)\testmain.obj
+
+TESTSDKLIBS= \
+	$(NIDMLIBDIR)\nidmgr32.lib 	\
+	$(DEST)\kcacred.lib
+
+TESTEXE=$(DEST)\kcatest.exe
+
+$(TESTEXE): $(TESTEXEOBJS)
+	$(EXECONLINK) $(TESTSDKLIBS)
+
+test: $(TESTEXE)

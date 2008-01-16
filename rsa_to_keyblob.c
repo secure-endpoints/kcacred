@@ -126,11 +126,11 @@ LPVOID GetLastErrorText()
                           FORMAT_MESSAGE_IGNORE_INSERTS;
     LPVOID lpMsgBuf;
 
-    FormatMessage(dwFmtMsgFlags,
+    FormatMessageA(dwFmtMsgFlags,
                    NULL,
                    GetLastError(),
                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (LPTSTR) &lpMsgBuf,
+                   (LPSTR) &lpMsgBuf,
                    0,
                    NULL);
 

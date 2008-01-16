@@ -84,6 +84,8 @@ KHMEXP khm_int32
 
 #endif
 
+
+
 /* Handler for system messages.  The only two we handle are
    KMSG_SYSTEM_INIT and KMSG_SYSTEM_EXIT. */
 khm_int32 KHMAPI
