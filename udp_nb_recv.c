@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -73,7 +73,7 @@ int udp_nb_recv(SOCKET s, KX_MSG *msg)
 	} while(0);
 
 	if (cc > 0)
-		msg->m_curlen += cc;
+		msg->m_curlen = msg->m_curlen + (WORD)cc;
 
 	return cc;
 }

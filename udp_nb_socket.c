@@ -65,7 +65,7 @@ SOCKET
 udp_nb_socket(int port)
 {
 	struct sockaddr_in sockaddr;
-	int		arg;
+	unsigned long	arg;
 	SOCKET		s;
 
 

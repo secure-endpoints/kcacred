@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -90,12 +90,23 @@
 #endif /* WIN32 */
 
 #ifdef WSHELPER
+#pragma warning(push)
+#pragma warning(disable: 4210 4214)
 # include <wshelper.h>
+#pragma warning(pop)
 #else /* WSHELPER */
 # include <arpa/inet.h>
 # include <arpa/nameser.h>
 # include <resolv.h>
 #endif /* WSHELPER */
+
+#include <WTypes.h>
+#include <Windef.h>
+#include <WinNT.h>
+#pragma warning(push)
+#pragma warning(disable: 4210 4214)
+#include <Windns.h>
+#pragma warning(pop)
 
 #ifdef HAVE_SYS_FILIO_H
 # include <sys/filio.h>
@@ -218,7 +229,7 @@ get_kca_list(const char *realm,
         HEADER hdr;
     } answer;
 #endif
-    unsigned char *p=NULL;
+    char *p=NULL;
     char host[MAX_DNS_NAMELEN];
     struct hostent *hp = NULL;
 #ifndef WIN32
@@ -234,11 +245,6 @@ get_kca_list(const char *realm,
     void * memblock = NULL;
 
 #ifdef WIN32
-#include <WTypes.h>
-#include <Windef.h>
-#include <WinNT.h>
-#include <Windns.h>
-
 	DNS_STATUS	rc = 0;
 	PDNS_RECORD	ppResp = NULL;
 #endif /* WIN32 */

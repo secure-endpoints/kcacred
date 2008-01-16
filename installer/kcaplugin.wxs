@@ -13,6 +13,33 @@
 <?ifndef KPKCS11BinDir?>
     <?error KPKCS11BinDir not defined ?>
 <?endif?>
+<?if $(env.CPU) = "i386"?>
+    <?define Platform="Intel"?>
+    <?define Win64="no"?>
+<?elseif $(env.CPU) = "AMD64"?>
+    <?define Platform="x64"?>
+    <?define Win64="yes"?>
+<?else?>
+    <?error Unknown build type?>
+<?endif?>
+
+
+<!-- Platform specific macros -->
+<?if $(var.Platform) = "x64" ?>
+    <?define PIProgramFilesFolder="ProgramFiles64Folder"?>
+
+    <?define _kcacreds_en_us_guid="1D2B8050-B025-4345-92DC-986A59D512DD" ?>
+    <?define _kcacreds_plugin_guid="76DAB3E0-60FA-4B0D-96C7-8F09CF56114B" ?>
+    <?define _kcacreds_debugsyms_guid="D6E516C3-57DE-401D-BD3C-9EA20D837B2F" ?>
+    <?define _kpkcs11_plugin_guid="CC7C7C3D-19D3-4E15-A0D6-BE049D6E4280" ?>
+<?elseif $(var.Platform) = "Intel" ?>
+    <?define PIProgramFilesFolder="ProgramFilesFolder"?>
+
+    <?define _kcacreds_en_us_guid="CCE39889-2BF1-4C61-A93E-F5A442B079BC" ?>
+    <?define _kcacreds_plugin_guid="732F5BC6-721D-4E7C-9638-054DC0582313" ?>
+    <?define _kcacreds_debugsyms_guid="9E146EED-3F60-458E-B6AA-4E31BFE6E736" ?>
+    <?define _kpkcs11_plugin_guid="D3AD1224-09FA-4D50-B60E-F094F39AF498" ?>
+<?endif?>
 
   <Product
         Id="????????-????-????-????-????????????" 
@@ -24,6 +51,7 @@
     <Package Id="????????-????-????-????-????????????"
         Description="Provider of KCA credential management to Network Identity Manager" 
         InstallerVersion="200"
+        Platforms="$(var.Platform)"
         Compressed="yes" />
 
     <Media Id="1" Cabinet="Product.cab" EmbedCab="yes" CompressionLevel="high" />
@@ -59,17 +87,17 @@
     -->
 
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramFilesFolder">
+      <Directory Id="$(var.PIProgramFilesFolder)">
         <Directory Id="dirSecEndpoints" Name="secendpt" LongName="Secure Endpoints">
           <Directory Id="KCAPLUGINDIR" Name="kcaplgin" LongName="KCA Provider" src="$(var.BinDir)">
 
-              <Component Id="_kcacreds_en_us"
-                Guid="CCE39889-2BF1-4C61-A93E-F5A442B079BC" DiskId="1">
+              <Component Id="_kcacreds_en_us" Win64="$(var.Win64)"
+                Guid="$(var._kcacreds_en_us_guid)" DiskId="1">
                 <File Id="file_kcacred_en_us_dll" Name="kcacenu.dll" LongName="kcacred_en_us.dll" KeyPath="yes"/>
               </Component>
 
-              <Component Id="_kcacreds_plugin" 
-                Guid="732F5BC6-721D-4E7C-9638-054DC0582313" DiskId="1">
+              <Component Id="_kcacreds_plugin" Win64="$(var.Win64)"
+                Guid="$(var._kcacreds_plugin_guid)" DiskId="1">
                 <File Id="file_kcacred_dll" Name="kcacred.dll" LongName="kcacred.dll" KeyPath="yes"/>
                 <Registry Id="reg_mod_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Action="createKeyAndRemoveKeyOnUninstall" />
                 <Registry Id="reg_mod_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" />
@@ -85,7 +113,7 @@
                 <Registry Id="reg_plg_06" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Type" Type="integer" Value="1" />
               </Component>
 
-              <Component Id="_custom_realm_map"
+              <Component Id="_custom_realm_map" Win64="$(var.Win64)"
                 Guid="CC38D11A-C592-40FA-A740-D3C9075C2503">
                 <Condition>KCAREALMMAPFROM And KCAREALMMAPTO</Condition>
                 <Registry Id="reg_crm_0" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" KeyPath="yes"/>
@@ -95,8 +123,8 @@
                 <Registry Id="reg_crm_4" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCARealm" Type="string" Value="[KCAREALMMAPTO]" />
               </Component>
 
-              <Component Id="_kcacreds_debugsym"
-                Guid="9E146EED-3F60-458E-B6AA-4E31BFE6E736" DiskId="1">
+              <Component Id="_kcacreds_debugsym" Win64="$(var.Win64)"
+                Guid="$(var._kcacreds_debugsyms_guid)" DiskId="1">
                 <File Id="file_kcacred_pdb" Name="kcacred.pdb" LongName="kcacred.pdb" KeyPath="yes"/>
               </Component>
               <Component Id="_kcaplugin_chm"
@@ -104,12 +132,13 @@
                 <File Id="file_kcaplhlp_chm" Name="kcaplgin.chm" LongName="kcaplugin.chm" KeyPath="yes" />
               </Component>
 
-              <Component Id="_kpkcs11_plugin"
-                Guid="D3AD1224-09FA-4D50-B60E-F094F39AF498" DiskId="1">
+              <Component Id="_kpkcs11_plugin" Win64="$(var.Win64)"
+                Guid="$(var._kpkcs11_plugin_guid)" DiskId="1">
                 <File Id="file_kpkcs11_dll" Name="kpkcs11.dll" LongName="kpkcs11.dll" KeyPath="yes"
                   Source="$(var.KPKCS11BinDir)\kpkcs11.dll" />
               </Component>
 
+<?if $(var.Platform) = "Intel" ?>
 <?ifndef NOMODUTIL?>
             <Directory Id="dirModutil" Name="modutil">
               <Component Id="_modutil_exe"
@@ -161,7 +190,7 @@
               </Component>
             </Directory>
 <?endif?>
-
+<?endif?>
           </Directory>
         </Directory>
       </Directory>
@@ -179,6 +208,7 @@
         Description="Exposes the Windows certificate store for use by the Mozilla family of products."
         Level="1">
         <ComponentRef Id="_kpkcs11_plugin" />
+<?if $(var.Platform) = "Intel" ?>
 <?ifndef NOMODUTIL?>
         <Feature Id="Modutil" Title="Mozilla Security Module Database Tool"
           Description="Command-line utility for managing PKCS #1 modules for the Mozilla family of products.  Can be used to install the PKCS #11 Plugin for security certificates."
@@ -192,6 +222,7 @@
           <ComponentRef Id="_libnspr4_dll" />
           <ComponentRef Id="_msvcrt_dll" />
         </Feature>
+<?endif?>
 <?endif?>
       </Feature>
     </Feature>

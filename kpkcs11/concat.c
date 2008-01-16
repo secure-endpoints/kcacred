@@ -67,7 +67,7 @@
  */
 
 /*
- * Copyright  ©  2006
+ * Copyright  ©  2006-2008
  * Secure Endpoints Inc.
  * ALL RIGHTS RESERVED
  *
@@ -108,7 +108,7 @@ char *concat(int sep,...)
 	}
 	if (sep!=-1) {
 	    if (slen>0) { /* only add after first entry. */
-		*(string+slen)=sep;
+		*(string+slen)=(unsigned char)sep;
 		slen++;
 	    }
 	}

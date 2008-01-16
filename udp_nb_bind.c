@@ -82,7 +82,7 @@ typedef struct  sockaddr_in	SOCK_ADDR;
 int udp_nb_bind(SOCKET ls, u_short port)
 {
 	SOCK_ADDR	listener;
-	int		arg;
+	unsigned long	arg;
 
 
 	memset(&listener, 0, sizeof(listener));

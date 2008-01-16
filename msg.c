@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -90,6 +90,8 @@
 #include <netinet/in.h>	/* the payoff, htons and ntohs are defined here. */
 #endif
 
+#pragma warning(push)
+#pragma warning(disable: 4311)
 int msg_place_cksum(KX_MSG *msg)
 {
 	WORD		cksum = 0;
@@ -113,7 +115,7 @@ int msg_update_cksum(KX_MSG *msg)
 
 int msg_ck_cksum(KX_MSG *msg)
 {
-	WORD		cksum;
+	WORD		cksum=0;
 
 
 	if (MSG_PULL(msg, &cksum, sizeof(WORD)))
@@ -162,8 +164,8 @@ int msg_ck_mutauth(KX_MSG *msg,
 		   WORD mutauth_in)
 {
 	des_key_schedule	seskey_sched;
-	WORD		mutauth_out;
-	WORD		m_rand;
+	WORD		mutauth_out = 0;
+	WORD		m_rand = 0;
 	BYTE		*p;
 
 
@@ -184,3 +186,5 @@ int msg_ck_mutauth(KX_MSG *msg,
 
 	return (mutauth_in+1 == mutauth_out);
 }
+#pragma warning(pop)
+

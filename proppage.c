@@ -176,7 +176,7 @@ pp_cred_dlg_proc(HWND hwnd,
                 break;
             }
 
-            certId.IssuerSerialNumber.SerialNumber.cbData = cb;
+            certId.IssuerSerialNumber.SerialNumber.cbData = (DWORD)cb;
             certId.IssuerSerialNumber.SerialNumber.pbData = sn_buf;
 
             cb = sizeof(issuer_buf);
@@ -185,7 +185,7 @@ pp_cred_dlg_proc(HWND hwnd,
                 break;
             }
 
-            certId.IssuerSerialNumber.Issuer.cbData = cb;
+            certId.IssuerSerialNumber.Issuer.cbData = (DWORD)cb;
             certId.IssuerSerialNumber.Issuer.pbData = issuer_buf;
 
             certId.dwIdChoice = CERT_ID_ISSUER_SERIAL_NUMBER;

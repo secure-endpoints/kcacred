@@ -184,13 +184,13 @@ void b64_dodecode_padding(char *bitstring, int pad, char *out, int *b64_cnt)
 
 void _b64_init(void)
 {
-    int i;
+    unsigned char i;
 
     for (i=0; i<256; i++)
 	b64_decoding[i]='\0';
 
     for (i=0; i<64; i++)
-	b64_decoding[(int)b64_encoding[i]]=i;
+	b64_decoding[b64_encoding[i]]=i;
 
     b64_init_done++;
     return;

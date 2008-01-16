@@ -34,7 +34,7 @@
 KCAPluginExports e;
 
 void
-log(const char * m)
+logger(const char * m)
 {
     OutputDebugStringA(m);
     fprintf(stderr, "%s\n", m);
@@ -58,7 +58,7 @@ int main(int argc, char ** argv)
     kmm_load_module(L"KCAMod", 0, NULL);
 
     ZeroMemory(&e, sizeof(e));
-    e.log = log;
+    e.log = logger;
     e.magic = KCAPluginExportsMagic;
     e.size = sizeof(e);
 

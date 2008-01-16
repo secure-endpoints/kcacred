@@ -103,7 +103,7 @@ wchar_t * getContainerName(X509 *x509)
     i2d_ASN1_INTEGER(serial, (unsigned char **)&ptr);
     serial_str = i2s_ASN1_INTEGER(NULL, serial);
 
-    container_len = strlen(issuer_str)+strlen(serial_str)+2;
+    container_len = (int)(strlen(issuer_str)+strlen(serial_str)+2);
     container = (char *)malloc(container_len);
     if (!container)
 	goto error;

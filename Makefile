@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2007 Secure Endpoints Inc.
+# Copyright (c) 2006-2008 Secure Endpoints Inc.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -122,8 +122,8 @@ NIDMLIBDIR=$(NIDMSDKDIR)
 
 CD=cd
 RM=del /q
-MKDIR=mkdir
-RMDIR=rmdir
+MKDIR=md
+RMDIR=rd
 ECHO=echo
 CP=copy /y
 LINK=link
@@ -225,6 +225,19 @@ if exist "$@.manifest" $(RM) "$@.manifest"
 
 DLL=$(DEST)\$(DLLBASENAME).dll
 
+!if "$(CPU)" == "i386"
+KFWLIBS = \
+	"$(KFWLIBDIR)\krb5_32.lib" 		\
+	"$(KFWLIBDIR)\comerr32.lib"		\
+	"$(NIDMLIBDIR)\nidmgr32.lib"		
+!else 
+KFWLIBS = \
+	"$(KFWLIBDIR)\krb5_64.lib" 		\
+	"$(KFWLIBDIR)\comerr64.lib"		\
+	"$(NIDMLIBDIR)\nidmgr64.lib"
+!endif
+
+
 LIBFILES= 					\
 	dnsapi.lib 				\
 	secur32.lib				\
@@ -233,11 +246,9 @@ LIBFILES= 					\
 	shlwapi.lib				\
 	htmlhelp.lib				\
 	comctl32.lib				\
-	"$(KFWLIBDIR)\krb5_32.lib" 		\
-	"$(KFWLIBDIR)\comerr32.lib"		\
-	"$(NIDMLIBDIR)\nidmgr32.lib"		\
 	"$(OPENSSLDIR)\lib\libeay32.lib"	\
-	"$(OPENSSLDIR)\lib\ssleay32.lib"
+	"$(OPENSSLDIR)\lib\ssleay32.lib"        \
+        $(KFWLIBS)
 
 OBJFILES= \
 	$(OBJ)\credacq.obj	\
@@ -304,9 +315,9 @@ clean::
 fini:
 	@echo --- done ---
 
-bins: mkdirs $(CONFIGHEADER) $(DLL) $(KPKCS11DLL) $(HELPFILE) lang fini
+bins: mkdirs $(CONFIGHEADER) $(DLL) $(KPKCS11DLL) $(HELPFILE) lang test fini
 
-all: mkdirs $(CONFIGHEADER) $(DLL) $(KPKCS11DLL) $(HELPFILE) lang msi fini
+all: mkdirs $(CONFIGHEADER) $(DLL) $(KPKCS11DLL) $(HELPFILE) lang test msi fini
 
 $(CONFIGHEADER): Makefile
 	$(CP) << "$@"
@@ -413,7 +424,7 @@ clean::
 TESTEXEOBJS=$(OBJ)\testmain.obj
 
 TESTSDKLIBS= \
-	$(NIDMLIBDIR)\nidmgr32.lib 	\
+	$(KFWLIBS) 	\
 	$(DEST)\kcacred.lib
 
 TESTEXE=$(DEST)\kcatest.exe

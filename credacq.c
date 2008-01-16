@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -39,6 +39,14 @@
 #include <windowsx.h>
 
 #include <strsafe.h>
+
+#ifndef SIZE_MAX
+#ifdef _WIN64
+#define SIZE_MAX _UI64_MAX
+#else
+#define SIZE_MAX UINT_MAX
+#endif
+#endif
 
 /* This file provides handlers for the credentials acquisition
    messages including handling the user interface for the new
@@ -128,7 +136,7 @@ certset_get_cert_eff_realm(struct nc_cert_set * certset,
                                      certset->identity_realm);
 }
 
-int
+khm_size
 certset_add_cert(struct nc_cert_set * certset,
                  enum kca_host_method method,
                  const wchar_t * realm,
@@ -180,7 +188,7 @@ certset_add_cert(struct nc_cert_set * certset,
         assert(certset->certs);
 #endif
         if (certset->certs == NULL)
-            return -1;
+            return SIZE_MAX;
 
         ZeroMemory(&certset->certs[certset->n_certs],
                    sizeof(certset->certs[0]) * (certset->nc_certs - certset->n_certs));
@@ -480,7 +488,7 @@ UI_Edit_Proc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
                 GetClientRect(hwnd, &r);
 
-                DrawText(hdc, p_data->cue_banner, len, &r,
+                DrawText(hdc, p_data->cue_banner, (int)len, &r,
                          DT_SINGLELINE | DT_VCENTER);
 
                 if (hf)
@@ -1170,7 +1178,7 @@ dlg_save_identity_params(struct nc_dialog_data * d) {
 
     khc_write_int32(h.csp_all, L"KCAEnabled", d->enabled);
 
-    khc_write_int32(h.csp_all, L"NCerts", d->certset.n_certs);
+    khc_write_int32(h.csp_all, L"NCerts", (khm_int32)d->certset.n_certs);
 
     for (i=0; i < d->certset.n_certs; i++) {
         struct nc_cert * cert;
@@ -1808,7 +1816,7 @@ handle_kmsg_cred_new_creds(khui_new_creds * nc) {
     ZeroMemory(nct, sizeof(*nct));
 
     nct->type = credtype_id;
-    nct->ordinal = -1;
+    nct->ordinal = SIZE_MAX;
 
     LoadString(hResModule, IDS_CT_SHORT_DESC,
                wshortdesc, ARRAYLENGTH(wshortdesc));
@@ -2142,7 +2150,7 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
             goto cert_err_exit;
         }
 
-        cb_der = i2d_X509(cert, &pder_buf);
+        cb_der = i2d_X509(cert, (unsigned char **)&pder_buf);
 
         if (cb_der < 0) {
             log_printf("Error %d from i2d_X509", cb_der);

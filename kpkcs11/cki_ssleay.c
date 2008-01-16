@@ -67,7 +67,7 @@
  */
 
 /*
- * Copyright  ©  2006
+ * Copyright  ©  2006-2008
  * Secure Endpoints Inc.
  * ALL RIGHTS RESERVED
  *
@@ -125,7 +125,7 @@ CK_RV PKCS11_RSA_to_RsaPrivateKey(CK_SESSION_HANDLE hSession, RSA *rsa,
 	return(CKR_HOST_MEMORY);
     }
     for (i=0; i<NUM_ATTRS; i++) {
-	pTemplate[i].ulValueLen=-1L;
+	pTemplate[i].ulValueLen=(CK_ULONG)-1L;
 	pTemplate[i].value=NULL_PTR;
     }
     i=0;
@@ -426,7 +426,7 @@ CK_RV PKCS11_RSA_to_RsaPublicKey(CK_SESSION_HANDLE hSession, RSA *rsa,
     }
 	
     for (i=0; i<NUM_ATTRS; i++) {
-	pTemplate[i].ulValueLen=-1L;
+	pTemplate[i].ulValueLen=(CK_ULONG)-1L;
 	pTemplate[i].value=NULL_PTR;
     }
     
@@ -659,7 +659,7 @@ CK_RV PKCS11_X509_to_X509Certificate(CK_SESSION_HANDLE hSession, X509 *x, char *
     }
 
     for (i=0; i<NUM_ATTRS; i++) {
-	pTemplate[i].ulValueLen=-1L;
+	pTemplate[i].ulValueLen=(CK_ULONG)-1L;
 	pTemplate[i].value=NULL_PTR;
     }
     i=0;

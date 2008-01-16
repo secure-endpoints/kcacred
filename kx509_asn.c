@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -78,6 +78,9 @@
 #define ASN1_VISIBLESTRING_free(a)	ASN1_STRING_free((ASN1_STRING*)(a))
 #endif
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
+
 /*
  *	Allocate a new request with null strings.
  */
@@ -145,6 +148,7 @@ void KX509_RESPONSE_free(KX509_RESPONSE *a)
  *	have been stored.
  */
 
+int
 i2d_KX509_REQUEST(KX509_REQUEST *a, unsigned char **pp)
 {
 	M_ASN1_I2D_vars(a);
@@ -172,10 +176,11 @@ i2d_KX509_REQUEST(KX509_REQUEST *a, unsigned char **pp)
  *	have been stored.
  */
 
+int
 i2d_KX509_RESPONSE(KX509_RESPONSE *a, unsigned char **pp)
 {
 	ASN1_INTEGER *bs = 0;
-	int v0,v1,v2,v3;
+	int v0=0,v1=0,v2=0,v3=0;
 	M_ASN1_I2D_vars(a);
 
 	if (a->status)
@@ -345,3 +350,5 @@ bin_dump(c.q, c.p-c.q);
 	goto err;
 #endif
 }
+
+#pragma warning(pop)

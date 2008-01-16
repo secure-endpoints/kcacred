@@ -67,7 +67,7 @@
  */
 
 /*
- * Copyright  ©  2006
+ * Copyright  ©  2006-2008
  * Secure Endpoints Inc.
  * ALL RIGHTS RESERVED
  *
@@ -879,7 +879,7 @@ CK_RV CK_ENTRY C_GetAttributeValue(CK_SESSION_HANDLE hSession,
 		attr = PKCS11_FindAttribute_p(pSession->pToken->ppTokenObject[ctr]->pAttribute,pTemplate[j].type);
 		if (!attr) {
 		    log_printf("C_GetAttributeValue: attr not present\n");
-		    pTemplate[j].ulValueLen = -1L;
+		    pTemplate[j].ulValueLen = (CK_ULONG)-1L;
 		    res = CKR_ATTRIBUTE_TYPE_INVALID;
 		}
 		else if (pTemplate[j].value == NULL_PTR) {

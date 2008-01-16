@@ -54,7 +54,7 @@ find_matching_cert(HCERTSTORE hStoreHandle,
         return NULL;
     }
 
-    certId.IssuerSerialNumber.SerialNumber.cbData = cb;
+    certId.IssuerSerialNumber.SerialNumber.cbData = (DWORD)cb;
     certId.IssuerSerialNumber.SerialNumber.pbData = serial;
 
     cb = sizeof(issuer);
@@ -64,7 +64,7 @@ find_matching_cert(HCERTSTORE hStoreHandle,
         return NULL;
     }
 
-    certId.IssuerSerialNumber.Issuer.cbData = cb;
+    certId.IssuerSerialNumber.Issuer.cbData = (DWORD)cb;
     certId.IssuerSerialNumber.Issuer.pbData = issuer;
 
     certId.dwIdChoice = CERT_ID_ISSUER_SERIAL_NUMBER;

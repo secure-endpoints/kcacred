@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -62,7 +62,10 @@
 #include <fcntl.h>
 
 # define WSHELPER
+#pragma warning(push)
+#pragma warning(disable: 4210 4214)
 # include <wshelper.h>
+#pragma warning(pop)
 
 #ifdef HAVE_SYS_FILIO_H
 # include <sys/filio.h>
@@ -252,10 +255,10 @@ get_cert_authent_K5(krb5_context k5_context,
     
     /* obtain ticket & session key */
     if (result = krb5_build_principal_ext(k5_context, &mcreds.server,
-                                          strlen(realm),
+                                          (unsigned int)strlen(realm),
                                           realm,
-                                          strlen(CA_SERVICE), CA_SERVICE,
-                                          strlen(ca_hostname), ca_hostname,
+                                          (unsigned int)strlen(CA_SERVICE), CA_SERVICE,
+                                          (unsigned int)strlen(ca_hostname), ca_hostname,
                                           0))
     {
         const char * result_text = error_message(result);
@@ -432,7 +435,7 @@ int try_ca(krb5_context k5_context,
 	goto cleanup;
     }
 
-    if (MSG_ALLOC(&pkt_to_send, len)) {
+    if (MSG_ALLOC(&pkt_to_send, (WORD)len)) {
         log_printf("try_ca: could not allocate %d bytes?\n", len);
         *emsg = "Try again.  (Hopefully) transient client-side malloc problem";
         rc = (*err_num_ptr = KX509_STATUS_CLNT_TMP);
@@ -442,7 +445,7 @@ int try_ca(krb5_context k5_context,
     memcpy(pkt_to_send.m_data, version_2_0_string, 4);
     tmp_ptr = pkt_to_send.m_data+4;
     i2d_KX509_REQUEST(request, &tmp_ptr);
-    pkt_to_send.m_curlen = tmp_ptr - pkt_to_send.m_data;
+    pkt_to_send.m_curlen = (WORD)(tmp_ptr - pkt_to_send.m_data);
 
     /* XXX This won't work on macintosh */
     if (debugPrint) {
@@ -720,7 +723,7 @@ int getcert(RSA	        **rsa,
     char		ca_hostname_to_try[256];
     char		*base_realm = NULL;
     char		*env_host_list = NULL;
-    int			rc;
+    int			rc = 0;
     int			n, m;
     struct verify_arg 	arg[1]; 
     SOCKET		socket = INVALID_SOCKET;
