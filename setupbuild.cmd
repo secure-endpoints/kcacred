@@ -26,9 +26,25 @@ for %%i in (candle.exe) do (
         if "%%~$PATH:i"=="" goto nowix
         echo candle.exe found at : %%~$PATH:i
 )
-goto headout
+goto headout1
 :nowix
 set PATH=%PATH%;c:\work\wix2
-:headout
+:headout1
+for %%i in (gtags.exe) do (
+        if "%%~$PATH:i"=="" goto nogtags
+        echo gtags.exe found at : %%~$PATH:i
+)
+goto headout2
+:nogtags
+set PATH=%PATH%;c:\work\global\bin
+:headout2
+for %%i in (runemacs.exe) do (
+        if "%%~$PATH:i"=="" goto noemacs
+        echo runemacs.exe found at : %%~$PATH:i
+)
+goto headout3
+:noemacs
+set PATH=%PATH%;c:\emacs-22.1\bin\
+:headout3
 title KCA Build
 exit /b
