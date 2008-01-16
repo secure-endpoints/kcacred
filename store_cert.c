@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -109,6 +109,7 @@ wchar_t * getContainerName(X509 *x509)
 	goto error;
 
     StringCbPrintfA(container, container_len, "%s:%s",issuer_str,serial_str);
+    log_printf("ContainerName: %s", container);
 
     len2 = (strlen(container)+1)*2;
     containerW = (wchar_t *)malloc(len2);
@@ -132,7 +133,7 @@ wchar_t * getContainerName(X509 *x509)
 }
 
 int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
-    HCERTSTORE          hStoreHandle;
+    HCERTSTORE          hStoreHandle = NULL;
     PCCERT_CONTEXT      pCertContext=NULL;      
     CRYPT_KEY_PROV_INFO NewProvInfo;
     DWORD               dwPropId; 
@@ -140,7 +141,7 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
     DWORD		dwCertEncodingType = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
     DWORD		dwErr;
     DWORD		dwFindFlags = 0;
-    DWORD		dwAddDisposition = CERT_STORE_ADD_NEW;
+    DWORD		dwAddDisposition = CERT_STORE_ADD_ALWAYS;
     int			rc = 0;
     LPVOID              gletext;
 
@@ -168,13 +169,14 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
             log_printf("CertAddEncodedCertificateToStore returned CRYPT_E_EXISTS");
         } else if ((dwErr & CRYPT_E_OSS_ERROR) == CRYPT_E_OSS_ERROR) {
             log_printf("CertAddEncodedCertificateToStore returned CRYPT_E_OSS_ERROR"
-                       " with GetLastError() returning 0x%08x -- %s", dwErr, gletext);
+                       " with GetLastError() returning 0x%08x -- %s", dwErr, gletext ? gletext : "");
         } else {
             log_printf("CertAddEncodedCertificateToStore failed with 0x%08x -- ", dwErr, gletext);
         }
-        LocalFree(gletext);
+        if (gletext)
+            LocalFree(gletext);
 
-        return 0;
+        goto cleanup;
     }
 
     //--------------------------------------------------------------------
@@ -189,8 +191,6 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
     NewProvInfo.cProvParam = 0;
     NewProvInfo.rgProvParam = NULL;
     NewProvInfo.dwKeySpec = AT_KEYEXCHANGE;	//	AT_SIGNATURE; // 
-
-    rc = 1;
 
     //--------------------------------------------------------------------
     // Set the property.
@@ -217,14 +217,17 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
 				certificate. */
         )) {
         HandleError("Set property failed."); 
-        rc = 0;
+        goto cleanup;
     }
 
+    rc = 1;
+
+  cleanup:
     //--------------------------------------------------------------------
     // Clean up.
-    CertFreeCertificateContext(pCertContext);
-    if(!CertCloseStore(hStoreHandle,
-                       CERT_CLOSE_STORE_CHECK_FLAG)) {
+    if (pCertContext)
+        CertFreeCertificateContext(pCertContext);
+    if(hStoreHandle && !CertCloseStore(hStoreHandle, CERT_CLOSE_STORE_CHECK_FLAG)) {
         log_printf("The store was closed, but certificates still in use.");
     }
 

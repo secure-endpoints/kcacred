@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -90,9 +90,9 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
             gle = GetLastError();
             if (gle != NTE_BAD_KEYSET) {
                 gletext = GetLastErrorText();
-                log_printf("initial CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext);
-                LocalFree(gletext);
-                gletext = NULL;
+                log_printf("initial CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext ? gletext : "");
+                if (gletext)
+                    LocalFree(gletext);
             }
 
             //--------------------------------------------------------------------
@@ -105,8 +105,9 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
                 {
                     gle = GetLastError();
                     gletext = GetLastErrorText();
-                    log_printf("second CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext);
-                    LocalFree(gletext);
+                    log_printf("second CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext ? gletext : "");
+                    if (gletext)
+                        LocalFree(gletext);
                     HandleError("Cannot create Registry container for your private key.\n");
                 }
         }
@@ -125,16 +126,18 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
         {
             gle = GetLastError();
             gletext = GetLastErrorText();
-            log_printf("CryptImportKey failed GetLastError() returns 0x%08x -- %s\n", gle, gletext);
-            LocalFree(gletext);
+            log_printf("CryptImportKey failed GetLastError() returns 0x%08x -- %s\n", gle, gletext ? gletext : "");
+            if (gletext)
+                LocalFree(gletext);
         }
 
     if (!CryptReleaseContext(hCryptProv, 0))
         {
             gle = GetLastError();
             gletext = GetLastErrorText();
-            log_printf("CryptReleaseContext failed with GetLastError() = 0x%08x -- %s\n", gle, gletext);
-            LocalFree(gletext);
+            log_printf("CryptReleaseContext failed with GetLastError() = 0x%08x -- %s\n", gle, gletext ? gletext : "");
+            if (gletext)
+                LocalFree(gletext);
             return 0;
         }
 

@@ -16,13 +16,13 @@
 
   <Product
         Id="????????-????-????-????-????????????" 
-        Name="KCA Plugin $(var.KCAPluginVersion) for NetIDMgr $(var.NetIDMgrVersion)"
+        Name="KCA Provider $(var.KCAPluginVersion) for NetIDMgr $(var.NetIDMgrVersion)"
         Language="1033"
         Version="$(var.KCAPluginVersion)"
         Manufacturer="Secure Endpoints Inc."
         UpgradeCode="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
     <Package Id="????????-????-????-????-????????????"
-        Description="Plugin providing KCA certificates to Network Identity Manager" 
+        Description="Provider of KCA credential management to Network Identity Manager" 
         InstallerVersion="200"
         Compressed="yes" />
 
@@ -61,7 +61,7 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">
         <Directory Id="dirSecEndpoints" Name="secendpt" LongName="Secure Endpoints">
-          <Directory Id="KCAPLUGINDIR" Name="kcaplgin" LongName="KCA Plugin" src="$(var.BinDir)">
+          <Directory Id="KCAPLUGINDIR" Name="kcaplgin" LongName="KCA Provider" src="$(var.BinDir)">
 
               <Component Id="_kcacreds_en_us"
                 Guid="CCE39889-2BF1-4C61-A93E-F5A442B079BC" DiskId="1">
@@ -167,7 +167,7 @@
       </Directory>
     </Directory>
 
-    <Feature Id="Complete" Title="NetIDMgr KCA Plugin" Level="1">
+    <Feature Id="Complete" Title="NetIDMgr KCA Provider" Level="1">
       <ComponentRef Id="_kcacreds_plugin" />
       <ComponentRef Id="_kcacreds_en_us" />
       <ComponentRef Id="_kcaplugin_chm" />

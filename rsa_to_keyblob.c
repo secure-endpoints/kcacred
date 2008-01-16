@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -124,7 +124,7 @@ LPVOID GetLastErrorText()
     DWORD dwFmtMsgFlags = FORMAT_MESSAGE_ALLOCATE_BUFFER |
                           FORMAT_MESSAGE_FROM_SYSTEM |
                           FORMAT_MESSAGE_IGNORE_INSERTS;
-    LPVOID lpMsgBuf;
+    LPVOID lpMsgBuf = NULL;
 
     FormatMessageA(dwFmtMsgFlags,
                    NULL,
@@ -142,22 +142,24 @@ void HandleError(char *s)
     DWORD dwFmtMsgFlags = FORMAT_MESSAGE_ALLOCATE_BUFFER |
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS;
-    LPVOID lpMsgBuf;
+    LPVOID lpMsgBuf = NULL;
     char msg[1024];
     DWORD dwLastError = GetLastError();
 
-    FormatMessage(dwFmtMsgFlags,
+    FormatMessageA(dwFmtMsgFlags,
                   NULL,
                   dwLastError,
                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPTSTR) &lpMsgBuf,
+                  (LPSTR) &lpMsgBuf,
                   0,
                   NULL);
 
     StringCbPrintfA(msg, sizeof(msg),
-                    "%s\nError code 0x%08x -- %s", s, dwLastError, lpMsgBuf);
+                    "%s\nError code 0x%08x -- %s", s, dwLastError, lpMsgBuf ? lpMsgBuf : "");
 
     MessageBoxA(0, msg, "KX509: Error!", MB_OK|MB_ICONERROR);
+    if (lpMsgBuf)
+        LocalFree(lpMsgBuf);
 }
 
 #define MAX_UNIQNAME_LEN	8
