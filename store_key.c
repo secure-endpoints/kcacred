@@ -76,7 +76,8 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
 {
     HCRYPTPROV hCryptProv;
     HCRYPTKEY  hKey;
-    LPVOID l;
+    DWORD      gle;
+    LPVOID     gletext;
 
     //----------------------------------------
     // ACQUIRE CRYPT CONTEXT
@@ -86,11 +87,12 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
                             PROV_RSA_FULL,     // Provider type
                             0))                // Flag values (?? CRYPT_SILENT ??)
         {
-            log_printf("initial CryptAcquireContext returned 0x%8X -- %s\n.", GetLastError(), (l = GetLastErrorText()));
-    
-            if (l) {
-                LocalFree(l);
-                l = NULL;
+            gle = GetLastError();
+            if (gle != NTE_BAD_KEYSET) {
+                gletext = GetLastErrorText();
+                log_printf("initial CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext);
+                LocalFree(gletext);
+                gletext = NULL;
             }
 
             //--------------------------------------------------------------------
@@ -101,13 +103,11 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
                                     PROV_RSA_FULL, // Provider type
                                     CRYPT_NEWKEYSET))
                 {
-                    log_printf("second CryptAcquireContext returned 0x%8X -- %s\n.", GetLastError(), (l = GetLastErrorText()));
+                    gle = GetLastError();
+                    gletext = GetLastErrorText();
+                    log_printf("second CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext);
+                    LocalFree(gletext);
                     HandleError("Cannot create Registry container for your private key.\n");
-
-                    if (l) {
-                        LocalFree(l);
-                        l = NULL;
-                    }
                 }
         }
     
@@ -123,20 +123,18 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
                        CRYPT_EXPORTABLE,
                        &hKey))
         {
-            log_printf("CryptImportKey failed GetLastError() returns 0x%08x -- %s\n", GetLastError(), (l = GetLastErrorText()));
-            if (l) {
-                LocalFree(l);
-                l = NULL;
-            }
+            gle = GetLastError();
+            gletext = GetLastErrorText();
+            log_printf("CryptImportKey failed GetLastError() returns 0x%08x -- %s\n", gle, gletext);
+            LocalFree(gletext);
         }
 
     if (!CryptReleaseContext(hCryptProv, 0))
         {
-            log_printf("CryptReleaseContext failed with GetLastError() = 0x%08x -- %s\n", GetLastError(), (l = GetLastErrorText()));
-            if (l) {
-                LocalFree(l);
-                l = NULL;
-            }
+            gle = GetLastError();
+            gletext = GetLastErrorText();
+            log_printf("CryptReleaseContext failed with GetLastError() = 0x%08x -- %s\n", gle, gletext);
+            LocalFree(gletext);
             return 0;
         }
 

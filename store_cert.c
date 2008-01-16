@@ -69,13 +69,13 @@ wchar_t * getContainerName(X509 *x509)
 {
     char * ptr;
     char * issuer_der =NULL, * serial_der = NULL;
-    char * issuer_b64 = NULL, * serial_b64 = NULL;
     char * container = NULL;
     wchar_t * containerW = NULL;
     int issuer_len, serial_len, container_len;
     X509_NAME *issuer;
     ASN1_INTEGER *serial;
     size_t 		len2;
+    char * issuer_str = NULL, * serial_str = NULL;
 
     issuer = X509_get_issuer_name(x509);
     if (issuer == NULL)
@@ -86,10 +86,10 @@ wchar_t * getContainerName(X509 *x509)
 	goto error;
     ptr = issuer_der;
     i2d_X509_NAME(issuer, (unsigned char **)&ptr);
-    issuer_b64 = malloc((issuer_len+1)*2);
-    if (!issuer_b64)
+    issuer_str = malloc(issuer_len+1);
+    if (!issuer_str)
 	goto error;
-    b64_encode(issuer_der, issuer_len, issuer_b64);
+    X509_NAME_oneline(issuer, issuer_str, issuer_len+1);
 
     serial = X509_get_serialNumber(x509);
     if (serial == NULL)
@@ -101,17 +101,14 @@ wchar_t * getContainerName(X509 *x509)
 
     ptr = serial_der;
     i2d_ASN1_INTEGER(serial, (unsigned char **)&ptr);
-    serial_b64 = malloc((serial_len+1)*2);
-    if (!serial_b64)
-	goto error;
-    b64_encode(serial_der, serial_len, serial_b64);
+    serial_str = i2s_ASN1_INTEGER(NULL, serial);
 
-    container_len = strlen(issuer_b64)+strlen(serial_b64)+2;
+    container_len = strlen(issuer_str)+strlen(serial_str)+2;
     container = (char *)malloc(container_len);
     if (!container)
 	goto error;
 
-    StringCbPrintfA(container, container_len, "%s:%s",issuer_b64,serial_b64);
+    StringCbPrintfA(container, container_len, "%s:%s",issuer_str,serial_str);
 
     len2 = (strlen(container)+1)*2;
     containerW = (wchar_t *)malloc(len2);
@@ -120,16 +117,16 @@ wchar_t * getContainerName(X509 *x509)
     AnsiStrToUnicode(containerW, len2, container);
 
   error:
+    if (issuer_str)
+        free(issuer_str);
+    if (serial_str)
+        OPENSSL_free(serial_str);
     if (issuer_der)
-	free(issuer_der);
+        free(issuer_der);
     if (serial_der)
-	free(serial_der);
-    if (issuer_b64)
-	free(issuer_b64);
-    if (serial_b64)
-	free(serial_b64);
+        free(serial_der);
     if (container)
-	free(container);
+        free(container);
 
     return containerW;
 }
@@ -145,6 +142,7 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
     DWORD		dwFindFlags = 0;
     DWORD		dwAddDisposition = CERT_STORE_ADD_NEW;
     int			rc = 0;
+    LPVOID              gletext;
 
     //--------------------------------------------------------------------
     // Open a store as the source of the certificates to be deleted and added
@@ -165,22 +163,16 @@ int store_cert(BYTE *cert, DWORD len, wchar_t * container) {
                                                 &pCertContext // returned pointer to CERT_CONTEXT
                                                 ))) {
         dwErr = GetLastError();
+        gletext = GetLastErrorText();
         if (dwErr == CRYPT_E_EXISTS) {
             log_printf("CertAddEncodedCertificateToStore returned CRYPT_E_EXISTS");
         } else if ((dwErr & CRYPT_E_OSS_ERROR) == CRYPT_E_OSS_ERROR) {
-            LPVOID l;
-
             log_printf("CertAddEncodedCertificateToStore returned CRYPT_E_OSS_ERROR"
-                       " with GetLastError() returning 0x%08x -- %s", dwErr, (l = GetLastErrorText()));
-            if (l)
-                LocalFree(l);
+                       " with GetLastError() returning 0x%08x -- %s", dwErr, gletext);
         } else {
-            LPVOID l;
-
-            log_printf("CertAddEncodedCertificateToStore failed with 0x%08x -- ", dwErr, (l = GetLastErrorText()));
-            if (l)
-                LocalFree(l);
+            log_printf("CertAddEncodedCertificateToStore failed with 0x%08x -- ", dwErr, gletext);
         }
+        LocalFree(gletext);
 
         return 0;
     }
