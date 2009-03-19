@@ -13,6 +13,7 @@
 <?ifndef KPKCS11BinDir?>
     <?error KPKCS11BinDir not defined ?>
 <?endif?>
+
 <?if $(env.CPU) = "i386"?>
     <?define Platform="Intel"?>
     <?define Win64="no"?>
@@ -233,13 +234,13 @@
 
     <!-- Product search -->
     <Property Id="KFWVERSION">
-        <RegistrySearch Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" />
+        <RegistrySearch Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" Win64="$(var.Win64)" />
     </Property>
     <Property Id="KFWVERSIONMAJOR">
-        <RegistrySearch Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" />
+        <RegistrySearch Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" Win64="$(var.Win64)" />
     </Property>
     <Property Id="KFWVERSIONMINOR">
-        <RegistrySearch Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" />
+        <RegistrySearch Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" Win64="$(var.Win64)" />
     </Property>
     <!-- Launch conditions -->
     <Condition Message="This product requires Windows 2000, Windows XP, Windows 2003 or newer operating system.">
@@ -970,7 +971,7 @@
           <Text>You have chosen to remove the program from your computer.</Text>
         </Control>
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>[DlgTitleFont]Remove OpenAFS plugin for NetIDMgr</Text>
+          <Text>[DlgTitleFont]Remove KCA plugin for NetIDMgr</Text>
         </Control>
       </Dialog>
       <Dialog Id="VerifyRepairDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes" TrackDiskSpace="yes">
@@ -999,7 +1000,7 @@
           <Text>The [Wizard] is ready to begin the repair of [ProductName].</Text>
         </Control>
         <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
-          <Text>[DlgTitleFont]Repair OpenAFS Plugin for NetIDMgr</Text>
+          <Text>[DlgTitleFont]Repair KCA Plugin for NetIDMgr</Text>
         </Control>
       </Dialog>
       <Dialog Id="WaitForCostingDlg" Y="10" Width="260" Height="85" Title="[ProductName] [Setup]" NoMinimize="yes">

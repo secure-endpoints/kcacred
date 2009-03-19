@@ -254,7 +254,7 @@ void kca_list_creds(void) {
 			LocalFree(pAltNameInfo);
 			pAltNameInfo = NULL;
 
-                        log_printf("   value is: '%s'", widname);
+                        log_printf("   value is: '%S'", widname);
 		    }
 		}
 	    }
