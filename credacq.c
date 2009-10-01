@@ -805,12 +805,6 @@ dlg_enable_certs(struct nc_dialog_data * d, BOOL enable, BOOL update_control) {
     if (update_control) {
         CheckDlgButton(d->hwnd, IDC_NC_ENABLE, (enable ? BST_CHECKED : BST_UNCHECKED));
     }
-
-    if (d->nc) {
-        PostMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY,
-                    MAKEWPARAM(0, WMNC_UPDATE_CREDTEXT),
-                    (LPARAM) d->nc);
-    }
 }
 
 void
@@ -1063,6 +1057,7 @@ dlg_load_identity_params(struct nc_dialog_data * d,
     struct dlg_ident_handle h;
     khm_int32 t;
     khm_size cb;
+    khm_handle tident;
 
     h.csp_all = NULL;
 
@@ -1079,15 +1074,19 @@ dlg_load_identity_params(struct nc_dialog_data * d,
                                 d->certset.identity_realm,
                                 sizeof(d->certset.identity_realm))) &&
         (d->nc == NULL ||
-         d->nc->n_identities == 0 ||
-         d->nc->identities[0] == NULL ||
-         !dlg_open_ident_handle(d->nc->identities[0], 0, &h,
+	 KHM_FAILED(khui_cw_get_primary_id(d->nc, &tident)) ||
+         !dlg_open_ident_handle(tident, 0, &h,
                                 d->certset.identity_realm,
                                 sizeof(d->certset.identity_realm)))) {
 
         if (!dlg_open_ident_handle(NULL, 0, &h, NULL, 0)) {
             h.csp_all = NULL;
         }
+    }
+
+    if (tident != NULL) {
+	kcdb_identity_release(tident);
+	tident = NULL;
     }
 
     if (h.csp_all == NULL) {
@@ -1151,6 +1150,7 @@ void
 dlg_save_identity_params(struct nc_dialog_data * d) {
     struct dlg_ident_handle h;
     khm_size i;
+    khm_handle ident = NULL;
 
     if (!d->dirty)
         return;
@@ -1163,9 +1163,8 @@ dlg_save_identity_params(struct nc_dialog_data * d) {
         &&
 
         (d->nc == NULL ||
-         d->nc->n_identities == 0 ||
-         d->nc->identities[0] == NULL ||
-         !dlg_open_ident_handle(d->nc->identities[0],
+	 KHM_FAILED(khui_cw_get_primary_id(d->nc, &ident)) ||
+         !dlg_open_ident_handle(ident,
                                 KHM_FLAG_CREATE | KCONF_FLAG_WRITEIFMOD,
                                 &h, NULL, 0))
 
@@ -1173,7 +1172,15 @@ dlg_save_identity_params(struct nc_dialog_data * d) {
 
         !dlg_open_ident_handle(NULL, KHM_FLAG_CREATE | KCONF_FLAG_WRITEIFMOD,
                                &h, NULL, 0)) {
+
+	if (ident != NULL)
+	    kcdb_identity_release(ident);
         return;
+    }
+
+    if (ident != NULL) {
+	kcdb_identity_release(ident);
+	ident = NULL;
     }
 
     khc_write_int32(h.csp_all, L"KCAEnabled", d->enabled);
@@ -1525,23 +1532,31 @@ handle_khui_wm_nc_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
             wchar_t msg_fmt[KHUI_MAXCCH_SHORT_DESC];
             wchar_t msg[KHUI_MAXCCH_SHORT_DESC];
             khm_int32 flags = 0;
+	    khm_handle ident = NULL;
 
             assert(d->nct->credtext);
 
             /* do not add a custom credential text string if there is
                no valid identity selected. */
             if (!d->nc ||
-                d->nc->n_identities <= 0 ||
-                d->nc->identities[0] == NULL ||
-                KHM_FAILED(kcdb_identity_get_flags(d->nc->identities[0],
+		KHM_FAILED(khui_cw_get_primary_id(d->nc, &ident)) ||
+                KHM_FAILED(kcdb_identity_get_flags(ident,
                                                    &flags)) ||
                 !(flags & KCDB_IDENT_FLAG_VALID)) {
+
+		if (ident)
+		    kcdb_identity_release(ident);
 
                 StringCbCopy(d->nct->credtext, KHUI_MAXCB_LONG_DESC,
                              L"");
                 break;
 
             }
+
+	    if (ident) {
+		kcdb_identity_release(ident);
+		ident = NULL;
+	    }
 
             /* we are being requested to update the credentials
                text. We already allocated a buffer when we created the
@@ -1607,10 +1622,16 @@ handle_khui_wm_nc_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
 
     case WMNC_IDENTITY_CHANGE:
         {
-            dlg_load_identity_params(d,
-                                     (d->nc->n_identities > 0)? d->nc->identities[0]: NULL);
+	    khm_handle ident = NULL;
+
+	    khui_cw_get_primary_id(d->nc, &ident);
+
+            dlg_load_identity_params(d, ident);
             dlg_enable_certs(d, d->enabled, TRUE);
             dlg_init(d);
+
+	    if (ident)
+		kcdb_identity_release(ident);
         }
         break;
 
