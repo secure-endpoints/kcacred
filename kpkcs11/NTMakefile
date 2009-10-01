@@ -191,7 +191,7 @@ LIBFILES= 					\
 	user32.lib \
 	gdi32.lib \
 	crypt32.lib \
-	"$(OPENSSLDIR)\lib\libeay32.lib" 
+	"$(OPENSSLDIR)\out32dll\libeay32.lib" 
 
 OBJFILES= \
 	$(OBJ)\b64.obj	\
