@@ -8,14 +8,14 @@ exit /b
 
 :retail
 echo Setting up environment for RETAIL
-call "%PROGRAMFILES%\Microsoft Platform SDK\SetEnv.cmd" /XP32 /RETAIL
-set NIDMSDKDIR=C:\work\pismere\athena\auth\krb5\src\windows\identity\obj\i386\rel
+call "D:\WindowsSDK\v6.1\bin\SetEnv.cmd" /xp /x86 /Release
+set NIDMSDKDIR=C:\work\netidmgrcpp\obj\i386\rel
 goto common
 
 :debug
 echo Setting up environment for DEBUG
-call "%PROGRAMFILES%\Microsoft Platform SDK\SetEnv.cmd" /XP32 /DEBUG
-set NIDMSDKDIR=C:\work\pismere\athena\auth\krb5\src\windows\identity\obj\i386\dbg
+call "D:\WindowsSDK\v6.1\bin\SetEnv.cmd" /xp /x86 /Debug
+set NIDMSDKDIR=C:\work\netidmgrcpp\obj\i386\dbg
 goto common
 
 :common
