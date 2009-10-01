@@ -926,9 +926,10 @@ int getcert(RSA	        **rsa,
         }
     }
 
-    if (kca_hostlist[0]) {
+    if (kca_hostlist[0] == NULL) {
         rc = KX509_STATUS_CLNT_IGN;
         arg->emsg = "Error!  Unable to determine KCA hostname(s)!";
+	goto Failed;
     }
 
     /* ITERATE THROUGH LIST OF KCA HOSTNAMES 
@@ -959,11 +960,11 @@ int getcert(RSA	        **rsa,
 	}
     }
 
+  Failed:
     if (arg->emsg) {
         log_printf("%s\n", arg->emsg);
     }
 
-  Failed:
     if (socket != INVALID_SOCKET)
 	closesocket(socket);
 
