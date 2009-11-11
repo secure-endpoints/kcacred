@@ -114,6 +114,16 @@ NIDMINCDIR=$(NIDMSDKDIR)\inc
 NIDMLIBDIR=$(NIDMSDKDIR)
 !endif
 
+!if !exist($(OPENSSLDIR)\lib)
+!if exist($(OPENSSLDIR)\out32dll)
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32
+!endif
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\lib
+!endif
+
 # Win32.mak
 
 !include <Win32.Mak>
@@ -151,9 +161,10 @@ cwarn=
 C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS) /Fo"$@" /c $**
 
 !ifdef DEBUG
-DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMTD /IMPLIB:$(DEST)\$(@B).lib $**
+#DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMTD /IMPLIB:$(DEST)\$(@B).lib $**
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
 !else
-DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMT /IMPLIB:$(DEST)\$(@B).lib $**
+#DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMT /IMPLIB:$(DEST)\$(@B).lib $**
 !endif
 
 DLLRESLINK=$(LINK) /NOLOGO /DLL /NOENTRY /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" $**
@@ -237,7 +248,6 @@ KFWLIBS = \
 	"$(NIDMLIBDIR)\nidmgr64.lib"
 !endif
 
-
 LIBFILES= 					\
 	dnsapi.lib 				\
 	secur32.lib				\
@@ -246,8 +256,9 @@ LIBFILES= 					\
 	shlwapi.lib				\
 	htmlhelp.lib				\
 	comctl32.lib				\
-	"$(OPENSSLDIR)\lib\libeay32.lib"	\
-	"$(OPENSSLDIR)\lib\ssleay32.lib"        \
+	shell32.lib				\
+	"$(OPENSSLLIBDIR)\libeay32.lib"	\
+	"$(OPENSSLLIBDIR)\ssleay32.lib"        \
         $(KFWLIBS)
 
 OBJFILES= \
@@ -262,6 +273,7 @@ OBJFILES= \
 	$(OBJ)\pluginconfig.obj \
 	$(OBJ)\kpkcs11inst.obj  \
 	$(OBJ)\kcaexports.obj	\
+	$(OBJ)\kcaicon.obj	\
 # kx509 stuff
 	$(OBJ)\b64.obj		\
 	$(OBJ)\debug.obj	\

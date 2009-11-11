@@ -393,6 +393,8 @@ void kca_list_creds(void) {
     }
 
     kcdb_credset_collect(NULL, g_credset, NULL, credtype_id, NULL);
+
+    kca_icon_set_state(g_credset);
 }
 
 

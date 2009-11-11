@@ -106,6 +106,7 @@
 #include<windows.h>
 /* include the standard NetIDMgr header files */
 #include<netidmgr.h>
+#include<netidmgr_version.h>
 #include<tchar.h>
 
 /* declarations for language resources */
@@ -362,3 +363,68 @@ certset_destroy(struct nc_cert_set * certset);
 /* kpkcs11inst.c */
 void
 install_kpkcs11_plugin(void);
+
+
+/* kcaicon.c */
+void
+kca_icon_set_state(khm_handle credset_with_tokens);
+
+void
+kca_remove_icon(void);
+
+/* Compatibility */
+
+#if KH_VERSION_API < 12
+
+#ifdef _WIN64
+#define NIMDLLNAME L"nidmgr64.dll"
+#define API_khui_cw_get_primary_id "khui_cw_get_primary_id"
+#else
+#define NIMDLLNAME L"nidmgr32.dll"
+#define API_khui_cw_get_primary_id "_khui_cw_get_primary_id@8"
+#endif
+
+extern khm_int32
+(KHMAPI * pkhui_cw_get_primary_id)(khui_new_creds * nc, khm_handle *p_ident);
+
+#define khui_cw_get_primary_id   (*pkhui_cw_get_primary_id)
+
+#endif
+
+#if KH_VERSION_API < 7
+
+#ifdef _WIN64
+#define API_khui_action_lock "khui_action_lock"
+#define API_khui_action_unlock "khui_action_unlock"
+#define API_khui_refresh_actions "khui_refresh_actions"
+#define API_khui_request_UI_callback "khui_request_UI_callback"
+#else
+#define API_khui_action_lock "_khui_action_lock@0"
+#define API_khui_action_unlock "_khui_action_unlock@0"
+#define API_khui_refresh_actions "_khui_refresh_actions@0"
+#define API_khui_request_UI_callback "_khui_request_UI_callback@8"
+#endif
+
+extern void
+(KHMAPI * pkhui_action_lock)(void);
+
+extern void
+(KHMAPI * pkhui_action_unlock)(void);
+
+extern void
+(KHMAPI * pkhui_refresh_actions)(void);
+
+typedef khm_int32
+(KHMAPI * khm_ui_callback)(HWND hwnd_main_wnd, void * rock);
+
+extern khm_int32
+(KHMAPI * pkhui_request_UI_callback)(khm_ui_callback cb,
+                                     void * rock);
+
+#define khui_action_lock         (*pkhui_action_lock)
+#define khui_action_unlock       (*pkhui_action_unlock)
+#define khui_refresh_actions     (*pkhui_refresh_actions)
+#define khui_request_UI_callback (*pkhui_request_UI_callback)
+
+#endif
+

@@ -58,30 +58,42 @@ khm_handle csp_params = NULL;
 
 #if KH_VERSION_API < 7
 
-HMODULE hm_netidmgr;
-
 /* declarations from version 7 of the API */
-KHMEXP void
+void
 (KHMAPI * pkhui_action_lock)(void);
 
-KHMEXP void
+void
 (KHMAPI * pkhui_action_unlock)(void);
 
-KHMEXP void
+void
 (KHMAPI * pkhui_refresh_actions)(void);
 
 typedef khm_int32
 (KHMAPI * khm_ui_callback)(HWND hwnd_main_wnd, void * rock);
 
-KHMEXP khm_int32
+khm_int32
 (KHMAPI * pkhui_request_UI_callback)(khm_ui_callback cb,
                                      void * rock);
+#endif
 
-#define khui_action_lock         (*pkhui_action_lock)
-#define khui_action_unlock       (*pkhui_action_unlock)
-#define khui_refresh_actions     (*pkhui_refresh_actions)
-#define khui_request_UI_callback (*pkhui_request_UI_callback)
+#if KH_VERSION_API < 12
 
+HMODULE hm_netidmgr;
+
+khm_int32
+(KHMAPI * pkhui_cw_get_primary_id)(khui_new_creds *, khm_handle *);
+
+khm_int32 KHMAPI
+int_khui_cw_get_primary_id(khui_new_creds * nc, khm_handle * h)
+{
+    if (nc->n_identities > 0 && nc->identities[0] != NULL) {
+        *h = nc->identities[0];
+        kcdb_identity_hold(*h);
+        return KHM_ERROR_SUCCESS;
+    }
+    *h = NULL;
+    return KHM_ERROR_NOT_FOUND;
+}
 #endif
 
 
@@ -111,6 +123,46 @@ handle_kmsg_system(khm_int32 msg_type,
             kcdb_attrib attr;
             khm_handle csp_plugin = NULL;
             khm_handle csp_plugins = NULL;
+
+#if KH_VERSION_API < 12
+
+            do {
+                khm_version libver;
+                khm_ui_4 apiver;
+
+                khm_get_lib_version(&libver, &apiver);
+
+                if (apiver < 7)
+                    break;
+
+                hm_netidmgr = LoadLibrary(L"nidmgr32.dll");
+
+                if (hm_netidmgr == NULL)
+                    break;
+
+#if KH_VERSION_API < 7
+                pkhui_action_lock = (void (KHMAPI *)(void))
+                    GetProcAddress(hm_netidmgr, API_khui_action_lock);
+                pkhui_action_unlock = (void (KHMAPI *)(void))
+                    GetProcAddress(hm_netidmgr, API_khui_action_unlock);
+                pkhui_refresh_actions = (void (KHMAPI *)(void))
+                    GetProcAddress(hm_netidmgr, API_khui_refresh_actions);
+                pkhui_request_UI_callback = (khm_int32 (KHMAPI *)(khm_ui_callback, void *))
+                    GetProcAddress(hm_netidmgr, API_khui_request_UI_callback);
+#endif
+                pkhui_cw_get_primary_id = (khm_int32 (KHMAPI *)(khui_new_creds *, khm_handle *))
+                    GetProcAddress(hm_netidmgr, API_khui_cw_get_primary_id);
+
+                if (pkhui_cw_get_primary_id == NULL)
+                    pkhui_cw_get_primary_id = int_khui_cw_get_primary_id;
+            } while (FALSE);
+#endif
+
+            /* Add the icon now.  On NIM v2.x, doing so after tokens
+               were reported may result in a deadlock as we try to
+               switch to the UI thread and the UI thread is blocked on
+               a resource request to this plug-in. */
+            kca_icon_set_state(NULL);
 
             /* First and foremost, we need to register a credential
                type. */
@@ -335,36 +387,12 @@ handle_kmsg_system(khm_int32 msg_type,
                 khm_handle h_sub = NULL;
 
 #if KH_VERSION_API < 7
-
-                khm_version libver;
-                khm_ui_4 apiver;
-
-                khm_get_lib_version(&libver, &apiver);
-
-                if (apiver < 7)
-                    goto no_custom_help;
-
-                hm_netidmgr = LoadLibrary(L"nidmgr32.dll");
-
-                if (hm_netidmgr == NULL)
-                    goto no_custom_help;
-
-                pkhui_action_lock = (void (KHMAPI *)(void))
-                    GetProcAddress(hm_netidmgr, "_khui_action_lock@0");
-                pkhui_action_unlock = (void (KHMAPI *)(void))
-                    GetProcAddress(hm_netidmgr, "_khui_action_unlock@0");
-                pkhui_refresh_actions = (void (KHMAPI *)(void))
-                    GetProcAddress(hm_netidmgr, "_khui_refresh_actions@0");
-                pkhui_request_UI_callback = (khm_int32 (KHMAPI *)(khm_ui_callback, void *))
-                    GetProcAddress(hm_netidmgr, "_khui_request_UI_callback@8");
-
                 if (pkhui_action_lock == NULL ||
                     pkhui_action_unlock == NULL ||
                     pkhui_refresh_actions == NULL ||
                     pkhui_request_UI_callback == NULL)
 
                     goto no_custom_help;
-
 #endif
 
                 kmq_create_subscription(plugin_msg_proc, &h_sub);
@@ -432,6 +460,8 @@ handle_kmsg_system(khm_int32 msg_type,
             khui_config_node cnode;
             khui_config_node cn_idents;
             khm_int32 attr_id;
+
+            kca_remove_icon();
 
             /* It should not be assumed that initialization of the
                plugin went well at this point since we receive a
@@ -541,10 +571,14 @@ handle_kmsg_system(khm_int32 msg_type,
                 csp_params = NULL;
             }
 
-#if KH_VERSION_API < 7
+#if KH_VERSION_API < 12
             if (hm_netidmgr)
                 FreeLibrary(hm_netidmgr);
 
+            pkhui_cw_get_primary_id = NULL;
+#endif
+
+#if KH_VERSION_API < 7
             pkhui_action_lock = NULL;
             pkhui_action_unlock = NULL;
             pkhui_refresh_actions = NULL;

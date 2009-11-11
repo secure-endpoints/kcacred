@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\work\pismere\athena\auth\krb5\src\windows\identity\plugins\kca\lang\en_us\langres.rc
+// Used by C:\work\kca-plugin\lang\en_us\langres.rc
 //
 #define IDD_PP_CRED                     106
 #define IDD_PP_IDENT                    107
@@ -21,7 +21,9 @@
 #define IDI_ICON1                       117
 #define IDI_CERT                        117
 #define IDS_CFG_IDS_LONG_DESC           118
+#define IDI_CRED_GOOD                   118
 #define IDS_CFG_ID_SHORT_DESC           119
+#define IDI_CRED_NONE                   119
 #define IDS_CFG_ID_LONG_DESC            120
 #define IDS_ATTR_REALM_SHORT_DESC       121
 #define IDS_ATTR_REALM_LONG_DESC        122
@@ -53,6 +55,8 @@
 #define IDS_NC_MSGTITLE                 147
 #define IDS_NC_CANTADDREALM             148
 #define IDS_NC_CANTRENAME               148
+#define IDS_CRED_TT_NONE                149
+#define IDS_CRED_TT_GOOD                150
 #define IDC_NC_AUTOHOST                 1036
 #define IDC_NC_MANHOST                  1037
 #define IDC_NC_REALMHOST                1038
@@ -77,7 +81,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        118
+#define _APS_NEXT_RESOURCE_VALUE        120
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101

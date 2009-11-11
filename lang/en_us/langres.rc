@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -54,6 +54,8 @@ END
 // remains consistent on all systems.
 IDI_PLUGIN              ICON                    "..\\..\\images\\plugin.ico"
 IDI_CERT                ICON                    "..\\..\\images\\cert.ico"
+IDI_CRED_GOOD           ICON                    "C:\\work\\kca-plugin\\images\\notif_good.ico"
+IDI_CRED_NONE           ICON                    "C:\\work\\kca-plugin\\images\\notif_none.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -260,6 +262,8 @@ BEGIN
     IDS_NC_CUE_HOSTS        " (Automatically determine KCA servers)"
     IDS_NC_MSGTITLE         "KCA Credentials Provider"
     IDS_NC_CANTRENAME       "The certificate can't be renamed.  A certificate for the new realm (%s) already exists."
+    IDS_CRED_TT_NONE        "No KCA certificates found"
+    IDS_CRED_TT_GOOD        "KCA certificates for "
 END
 
 #endif    // English (U.S.) resources
@@ -273,7 +277,7 @@ END
 // Generated from the TEXTINCLUDE 3 resource.
 //
 
-
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

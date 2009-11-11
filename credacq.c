@@ -1057,7 +1057,7 @@ dlg_load_identity_params(struct nc_dialog_data * d,
     struct dlg_ident_handle h;
     khm_int32 t;
     khm_size cb;
-    khm_handle tident;
+    khm_handle tident = NULL;
 
     h.csp_all = NULL;
 

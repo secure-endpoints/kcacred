@@ -19,8 +19,8 @@ set NIDMSDKDIR=C:\work\netidmgrcpp\obj\i386\dbg
 goto common
 
 :common
-set KFWSDKDIR=c:\work\kfw-3.1.0-sdk
-set OPENSSLDIR=c:\work\openssl
+set KFWSDKDIR=c:\work\kfw-3.2.2-sdk
+set OPENSSLDIR=c:\work\openssl-0.9.8i
 set HHCFULLPATH="C:\Program Files\HTML Help Workshop\hhc.exe"
 for %%i in (candle.exe) do (
         if "%%~$PATH:i"=="" goto nowix
