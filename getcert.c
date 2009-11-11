@@ -1079,7 +1079,7 @@ void print_request(KX509_REQUEST *server_request)
 bin_dump(char *cp, int s)
 {
     char *buffer;
-    char c;
+    int c;
     int w;
     int i;
     long o;
