@@ -135,7 +135,7 @@ handle_kmsg_system(khm_int32 msg_type,
                 if (apiver < 7)
                     break;
 
-                hm_netidmgr = LoadLibrary(L"nidmgr32.dll");
+                hm_netidmgr = LoadLibrary(NIMDLLNAME);
 
                 if (hm_netidmgr == NULL)
                     break;
@@ -152,10 +152,10 @@ handle_kmsg_system(khm_int32 msg_type,
 #endif
                 pkhui_cw_get_primary_id = (khm_int32 (KHMAPI *)(khui_new_creds *, khm_handle *))
                     GetProcAddress(hm_netidmgr, API_khui_cw_get_primary_id);
-
-                if (pkhui_cw_get_primary_id == NULL)
-                    pkhui_cw_get_primary_id = int_khui_cw_get_primary_id;
             } while (FALSE);
+
+            if (pkhui_cw_get_primary_id == NULL)
+              pkhui_cw_get_primary_id = int_khui_cw_get_primary_id;
 #endif
 
             /* Add the icon now.  On NIM v2.x, doing so after tokens
