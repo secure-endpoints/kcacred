@@ -59,6 +59,18 @@ VERLISTC=$(VERMAJOR),$(VERMINOR),$(VERAUX),$(VERPATCH)
 ! error OPENSSLDIR environment variable not set.
 !endif
 
+!if !exist($(OPENSSLDIR)\lib)
+!if exist($(OPENSSLDIR)\out64dll)
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
+!elseif exist($(OPENSSLDIR)\out32dll)
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32
+!endif
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\lib
+!endif
+
 # Directories
 
 BUILDROOT=.
@@ -191,7 +203,7 @@ LIBFILES= 					\
 	user32.lib \
 	gdi32.lib \
 	crypt32.lib \
-	"$(OPENSSLDIR)\out32dll\libeay32.lib" 
+	"$(OPENSSLLIBDIR)\libeay32.lib" 
 
 OBJFILES= \
 	$(OBJ)\b64.obj	\

@@ -115,7 +115,9 @@ NIDMLIBDIR=$(NIDMSDKDIR)
 !endif
 
 !if !exist($(OPENSSLDIR)\lib)
-!if exist($(OPENSSLDIR)\out32dll)
+!if exist($(OPENSSLDIR)\out64dll)
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
+!elseif exist($(OPENSSLDIR)\out32dll)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
 !else
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32
