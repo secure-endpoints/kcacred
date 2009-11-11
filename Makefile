@@ -167,6 +167,7 @@ C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AU
 DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
 !else
 #DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMT /IMPLIB:$(DEST)\$(@B).lib $**
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
 !endif
 
 DLLRESLINK=$(LINK) /NOLOGO /DLL /NOENTRY /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" $**
@@ -412,7 +413,7 @@ VERDEBUG=-debug
 VERDEBUG=
 !endif
 
-MSIFILE=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)$(VERDEBUG).msi
+MSIFILE=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)-$(CPU)$(VERDEBUG).msi
 
 msi: $(MSIFILE)
 
