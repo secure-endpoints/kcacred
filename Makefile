@@ -56,7 +56,7 @@ DLLBASENAME=kcacred
 
 VERMAJOR=2
 VERMINOR=3
-VERAUX  =0
+VERAUX  =1
 VERPATCH=0
 
 # Target NetIDMgr version (string) only for display purposes
