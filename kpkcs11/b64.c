@@ -67,10 +67,27 @@
  */
 
 /*
- * Copyright  ©  2006-2008
- * Secure Endpoints Inc.
- * ALL RIGHTS RESERVED
- *
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
+ *  
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation
+ * files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy,
+ * modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 /* b64.c -- base-64 encoding/decoding, for pem files */
@@ -167,13 +184,13 @@ void b64_dodecode_padding(char *bitstring, int pad, char *out, int *b64_cnt)
 
 void _b64_init(void)
 {
-    char i;
+    int i;
 
     for (i=0; i<256; i++)
 	b64_decoding[i]='\0';
 
     for (i=0; i<64; i++)
-	b64_decoding[b64_encoding[i]]=i;
+	b64_decoding[b64_encoding[i]]=(char)i;
 
     b64_init_done++;
     return;

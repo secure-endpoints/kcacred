@@ -234,13 +234,13 @@
 
     <!-- Product search -->
     <Property Id="KFWVERSION">
-        <RegistrySearch Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" Win64="$(var.Win64)" />
+        <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" />
     </Property>
     <Property Id="KFWVERSIONMAJOR">
-        <RegistrySearch Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" Win64="$(var.Win64)" />
+        <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" />
     </Property>
     <Property Id="KFWVERSIONMINOR">
-        <RegistrySearch Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" Win64="$(var.Win64)" />
+        <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" />
     </Property>
     <!-- Launch conditions -->
     <Condition Message="This product requires Windows 2000, Windows XP, Windows 2003 or newer operating system.">

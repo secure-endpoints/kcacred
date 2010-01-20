@@ -376,32 +376,54 @@ kca_remove_icon(void);
 
 #if KH_VERSION_API < 12
 
+typedef int khui_nc_subtype;
+
 #ifdef _WIN64
-#define NIMDLLNAME L"nidmgr64.dll"
-#define API_khui_cw_get_primary_id "khui_cw_get_primary_id"
+#define NIMDLLNAME                  L"nidmgr64.dll"
+#define API_khui_cw_get_primary_id  "khui_cw_get_primary_id"
+#define API_khui_cw_get_result      "khui_cw_get_result"
+#define API_khui_cw_get_subtype     "khui_cw_get_subtype"
+#define API_khui_cw_get_ctx         "khui_cw_get_ctx"
 #else
-#define NIMDLLNAME L"nidmgr32.dll"
-#define API_khui_cw_get_primary_id "_khui_cw_get_primary_id@8"
+#define NIMDLLNAME                  L"nidmgr32.dll"
+#define API_khui_cw_get_primary_id  "_khui_cw_get_primary_id@8"
+#define API_khui_cw_get_result      "_khui_cw_get_result@4"
+#define API_khui_cw_get_subtype     "_khui_cw_get_subtype@4"
+#define API_khui_cw_get_ctx         "_khui_cw_get_ctx@4"
 #endif
 
 extern khm_int32
 (KHMAPI * pkhui_cw_get_primary_id)(khui_new_creds * nc, khm_handle *p_ident);
 
+extern khm_int32
+(KHMAPI * pkhui_cw_get_result)(khui_new_creds * c);
+
+extern khui_nc_subtype
+(KHMAPI * pkhui_cw_get_subtype)(khui_new_creds * c);
+
+extern khui_action_context *
+(KHMAPI * pkhui_cw_get_ctx)(khui_new_creds * c);
+
 #define khui_cw_get_primary_id   (*pkhui_cw_get_primary_id)
+#define khui_cw_get_result      (*pkhui_cw_get_result)
+#define khui_cw_get_subtype     (*pkhui_cw_get_subtype)
+#define khui_cw_get_ctx         (*pkhui_cw_get_ctx)
+
+#define KHUI_CNFLAG_INSTANCE    KHUI_CNFLAG_PLURAL
 
 #endif
 
 #if KH_VERSION_API < 7
 
 #ifdef _WIN64
-#define API_khui_action_lock "khui_action_lock"
-#define API_khui_action_unlock "khui_action_unlock"
-#define API_khui_refresh_actions "khui_refresh_actions"
+#define API_khui_action_lock        "khui_action_lock"
+#define API_khui_action_unlock      "khui_action_unlock"
+#define API_khui_refresh_actions    "khui_refresh_actions"
 #define API_khui_request_UI_callback "khui_request_UI_callback"
 #else
-#define API_khui_action_lock "_khui_action_lock@0"
-#define API_khui_action_unlock "_khui_action_unlock@0"
-#define API_khui_refresh_actions "_khui_refresh_actions@0"
+#define API_khui_action_lock        "_khui_action_lock@0"
+#define API_khui_action_unlock      "_khui_action_unlock@0"
+#define API_khui_refresh_actions    "_khui_refresh_actions@0"
 #define API_khui_request_UI_callback "_khui_request_UI_callback@8"
 #endif
 

@@ -74,10 +74,11 @@
 
 int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
 {
-    HCRYPTPROV hCryptProv;
-    HCRYPTKEY  hKey;
+    HCRYPTPROV hCryptProv = 0;
+    HCRYPTKEY  hKey = 0;
     DWORD      gle;
     LPVOID     gletext;
+    int        rc = 1;
 
     //----------------------------------------
     // ACQUIRE CRYPT CONTEXT
@@ -86,60 +87,64 @@ int store_key(BYTE *p, DWORD cbPk, wchar_t * container)
                             MS_DEF_PROV,       // Provider name
                             PROV_RSA_FULL,     // Provider type
                             0))                // Flag values (?? CRYPT_SILENT ??)
-        {
+    {
+        gle = GetLastError();
+        if (gle != NTE_BAD_KEYSET) {
+            gletext = GetLastErrorText();
+            log_printf("initial CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext ? gletext : "");
+            if (gletext)
+                LocalFree(gletext);
+            rc = 0;
+        }   
+
+        //--------------------------------------------------------------------
+        // NO PRE-EXISTING CONTAINER.  Create a new default key container. 
+        if(!CryptAcquireContext(&hCryptProv,
+                                 container,     // ContainerName
+                                 MS_DEF_PROV,   // Provider name 
+                                 PROV_RSA_FULL, // Provider type
+                                 CRYPT_NEWKEYSET))
+        {       
             gle = GetLastError();
-            if (gle != NTE_BAD_KEYSET) {
-                gletext = GetLastErrorText();
-                log_printf("initial CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext ? gletext : "");
-                if (gletext)
-                    LocalFree(gletext);
-            }
-
-            //--------------------------------------------------------------------
-            // NO PRE-EXISTING CONTAINER.  Create a new default key container. 
-            if(!CryptAcquireContext(&hCryptProv,
-                                    container,     // ContainerName
-                                    MS_DEF_PROV,   // Provider name 
-                                    PROV_RSA_FULL, // Provider type
-                                    CRYPT_NEWKEYSET))
-                {
-                    gle = GetLastError();
-                    gletext = GetLastErrorText();
-                    log_printf("second CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext ? gletext : "");
-                    if (gletext)
-                        LocalFree(gletext);
-                    HandleError("Cannot create Registry container for your private key.\n");
-                }
+            gletext = GetLastErrorText();
+            log_printf("second CryptAcquireContext returned 0x%8X -- %s\n.", gle, gletext ? gletext : "");
+            if (gletext)
+                LocalFree(gletext);
+            HandleError("Cannot create Registry container for your private key.\n");
+            rc = 0;
         }
+    }
     
-    // NOW IMPORT CALLER'S RSA KEY INTO THAT CONTAINER'S SIGNATURE KEY
-    //   (the PRIVKEYBLOB specifies that it's a "SIGNATURE" key)
-	
-    log_printf("About to ImportKey of Blob length of %0d\n", cbPk);
+    if (hCryptProv) {
+        // NOW IMPORT CALLER'S RSA KEY INTO THAT CONTAINER'S SIGNATURE KEY
+        //   (the PRIVKEYBLOB specifies that it's a "SIGNATURE" key)
 
-    if(!CryptImportKey(hCryptProv, 
-                       p,
-                       cbPk,
-                       0,
-                       CRYPT_EXPORTABLE,
-                       &hKey))
-        {
+        log_printf("About to ImportKey of Blob length of %0d\n", cbPk);
+
+        if(!CryptImportKey(hCryptProv, 
+                            p,
+                            cbPk,
+                            0,
+                            CRYPT_EXPORTABLE,
+                            &hKey))
+        {       
             gle = GetLastError();
             gletext = GetLastErrorText();
             log_printf("CryptImportKey failed GetLastError() returns 0x%08x -- %s\n", gle, gletext ? gletext : "");
             if (gletext)
                 LocalFree(gletext);
+            rc = 0;
         }
 
-    if (!CryptReleaseContext(hCryptProv, 0))
+        if (!CryptReleaseContext(hCryptProv, 0))
         {
             gle = GetLastError();
             gletext = GetLastErrorText();
             log_printf("CryptReleaseContext failed with GetLastError() = 0x%08x -- %s\n", gle, gletext ? gletext : "");
             if (gletext)
                 LocalFree(gletext);
-            return 0;
+            rc = 0;
         }
-
-    return 1;
+    }   
+    return rc;
 }

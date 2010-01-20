@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -41,6 +41,8 @@ get_plugin_exports(KCAPluginExports * e)
     e->store_key = store_key;
     e->store_cert = store_cert;
     e->list_creds = kca_list_creds;
+    e->rsa_to_keyblob = rsa_to_keyblob;
+    e->free = free;
 
     if (e->log)
         _log_external = e->log;

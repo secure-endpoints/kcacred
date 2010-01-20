@@ -1,6 +1,6 @@
 
   KCA Plug-in for Network Identity Manager
-  Version 1.1.1.0
+  Version 2.3.0.0
 
 ------------------------------------------------------------------
 
@@ -38,7 +38,7 @@
 
 2.      COPYRIGHT AND LICENSE
 
-    Copyright (c) 2006-2007 Secure Endpoints Inc.
+    Copyright (c) 2006-2010 Secure Endpoints Inc.
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation

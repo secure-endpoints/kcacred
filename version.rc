@@ -1,4 +1,4 @@
-/* Copyright (c) 2006-2007 Secure Endpoints Inc.
+/* Copyright (c) 2006-2010 Secure Endpoints Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -67,10 +67,10 @@
       BLOCK "040904b0"
       {
         VALUE "CompanyName",     "Secure Endpoints Inc."
-        VALUE "FileDescription", "KCA Credentials Provider Plugin"
+        VALUE "FileDescription", "KCA Credentials Provider Plug-in"
         VALUE "FileVersion",     VERSION_STRING
         VALUE "InternalName",    STR_INTNAME
-        VALUE "LegalCopyright",  "(C) 2006-2007 Secure Endpoints Inc."
+        VALUE "LegalCopyright",  "(C) 2006-2010 Secure Endpoints Inc."
         VALUE "OriginalFilename", STR_ORIGNAME
         VALUE "ProductName",     "KCA Credentials Provider"
         VALUE "ProductVersion",  VERSION_STRING
@@ -82,7 +82,7 @@
         VALUE NIMV_PLUGINS,      MYPLUGIN_NAME
 
         VALUE NIMV_APIVER,       KH_VERSION_STRINGAPI
-        VALUE NIMV_SUPPORT,      "http://www.secure-endpoints.com"
+        VALUE NIMV_SUPPORT,      "https://www.secure-endpoints.com"
 #endif
       }
     }

@@ -55,8 +55,8 @@ DLLBASENAME=kcacred
 # Version info
 
 VERMAJOR=2
-VERMINOR=1
-VERAUX  =1
+VERMINOR=3
+VERAUX  =0
 VERPATCH=0
 
 # Target NetIDMgr version (string) only for display purposes
@@ -94,6 +94,15 @@ DEBUG=1
 !endif
 
 
+!if !defined(CPU)
+!if "$(PROCESSOR_ARCHITECTURE)" == "x86"
+CPU = i386
+!endif
+!if "$(PROCESSOR_ARCHITECTURE)" == "AMD64"
+CPU = AMD64
+!endif
+!endif
+
 !ifndef CPU
 !error Environment variable 'CPU' is not defined.
 !endif
@@ -114,16 +123,23 @@ NIDMINCDIR=$(NIDMSDKDIR)\inc
 NIDMLIBDIR=$(NIDMSDKDIR)
 !endif
 
-!if !exist($(OPENSSLDIR)\lib)
+!if "$(CPU)" == "AMD64"
 !if exist($(OPENSSLDIR)\out64dll)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
-!elseif exist($(OPENSSLDIR)\out32dll)
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64
+!endif
+!endif
+!if "$(CPU)" == "i386"
+!if exist($(OPENSSLDIR)\out32dll)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
 !else
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32
 !endif
-!else
-OPENSSLLIBDIR=$(OPENSSLDIR)\lib
+!endif
+
+!if !defined(OPENSSLLIBDIR)
+!error 'OPENSSLLIBDIR' cannot be determined.
 !endif
 
 # Win32.mak
@@ -196,8 +212,9 @@ mkdirs::
 !endif
 
 clean::
-	$(RM) "$(OBJ)\*.*"
-	$(RM) "$(DEST)\*.*"
+	-$(RM) "$(OBJ)\*.*"
+	-$(RM) "$(DEST)\*.*"
+        -$(RM) "*.pdb"
 
 .SUFFIXES: .h
 
@@ -311,8 +328,8 @@ help\kcaplugin.chm: help\kcaplugin.hhp
 	$(HHC) help\kcaplugin.hhp
 
 clean::
-        $(RM) $(HELPFILE)
-        $(RM) help\kcaplugin.chm
+        -$(RM) $(HELPFILE)
+        -$(RM) help\kcaplugin.chm
 
 # This is built from the Makefile in the kpkcs11 directory
 KPKCS11DLL=$(KPKCS11DEST)\kpkcs11.dll
@@ -360,7 +377,7 @@ $(CONFIGHEADER): Makefile
 <<
 
 clean::
-	$(RM) $(CONFIGHEADER)
+	-$(RM) $(CONFIGHEADER)
 
 $(DLL): $(OBJFILES) $(DLLRESFILE)
 	$(DLLGUILINK) $(LIBFILES)
@@ -368,7 +385,7 @@ $(DLL): $(OBJFILES) $(DLLRESFILE)
 	$(_VC_MANIFEST_CLEAN)
 
 clean::
-	$(RM) $(DLL)
+	-$(RM) $(DLL)
 
 # Language specific resources
 
@@ -388,19 +405,19 @@ $(LANGDLL): $(OBJ)\langres_$(LANG).res $(OBJ)\version_$(LANG).res
 	$(_VC_MANIFEST_CLEAN)
 
 clean::
-	$(RM) $(LANGDLL)
+	-$(RM) $(LANGDLL)
 
 $(OBJ)\version_$(LANG).res: version.rc
 	$(RC) $(RFLAGS) $(rincflags) /d LANGRES /d LANG_$(LANG) /fo $@ $**
 
 clean::
-	$(RM) $(OBJ)\version_$(LANG).res
+	-$(RM) $(OBJ)\version_$(LANG).res
 
 $(OBJ)\langres_$(LANG).res: lang\$(LANG)\langres.rc
 	$(RC2RES)
 
 clean::
-	$(RM) $(OBJ)\langres_$(LANG).res
+	-$(RM) $(OBJ)\langres_$(LANG).res
 
 # /English-US
 
@@ -429,7 +446,7 @@ $(OBJ)\kcaplugin.wixobj: installer\kcaplugin.wxs $(DLL) $(HELPFILE)
 	-out $@ installer\kcaplugin.wxs
 
 clean::
-	$(RM) $(MSIFILE)
+	-$(RM) $(MSIFILE)
 
 # Tests
 
@@ -440,6 +457,7 @@ TESTEXEOBJS=$(OBJ)\testmain.obj
 
 TESTSDKLIBS= \
 	$(KFWLIBS) 	\
+	"$(OPENSSLLIBDIR)\libeay32.lib"	\
 	$(DEST)\kcacred.lib
 
 TESTEXE=$(DEST)\kcatest.exe

@@ -64,18 +64,17 @@
 #include "debug.h" 
 
 #include <strsafe.h>
+#include <assert.h>
 
-/* "#define" macros that were dropped as-of OpenSSL-0.9.6 -- billdo 2000.1205 */
-
-#if SSLEAY_VERSION_NUMBER > 0x0090600e
-# define	Malloc		OPENSSL_malloc
-# define	Realloc		OPENSSL_realloc
-# define	Free(addr)	OPENSSL_free(addr)
-#endif
+/* 
+ * Documentation for PRIVATEKEYBLOB 
+ * http://msdn.microsoft.com/en-us/library/aa387401(VS.85).aspx 
+ */
 
 typedef unsigned int ALG_ID;
 
 /*#if 0*/
+#pragma pack (push, 1)
 typedef struct _PUBLICKEYSTRUC {
     BYTE    bType;
     BYTE    bVersion;
@@ -94,7 +93,7 @@ typedef struct _RSAPUBKEY {
 typedef struct _PRIVKEYBLOB {
 	PUBLICKEYSTRUC	blobheader;
 	RSAPUBKEY		rsapubkey;
-	DWORD			beginning[1];
+	BN_ULONG		beginning[1];
 //	BYTE			modulus[KEYBITS/8];			// "n"
 //	BYTE			prime1[KEYBITS/16];			// "p"
 //	BYTE			prime2[KEYBITS/16];			// "q"
@@ -103,13 +102,14 @@ typedef struct _PRIVKEYBLOB {
 //	BYTE			coefficient[KEYBITS/16];	// "iqmp"
 //	BYTE			privateExponent[KEYBITS/8];	// "d"
 } PRIVKEYBLOB;
+#pragma pack (pop)
 
 void hexdump(void *pin, char *label, int len)
 {
     BYTE *p = (BYTE *)pin;
     int	i;
 
-    log_printf("%s (%0d bytes):", label, len<<2);
+    log_printf("%s (%0d bytes):", label, len*BN_BYTES);
     for (i=0; i<len*BN_BYTES; i++)
     {
         if ((i & 0x7) == 0)
@@ -168,35 +168,33 @@ int rsa_to_keyblob(int keybits, RSA *key, BYTE	**ppk, DWORD *pcbPk)
 {
     PRIVKEYBLOB	*pk;
     RSAPUBKEY	*pPub;
-    DWORD		*p;
-    DWORD		*key_n, *key_p, *key_q, *key_dmp1, *key_dmq1, *key_iqmp, *key_d;
-
-    DWORD		cbPubKeyStruc	= sizeof(PUBLICKEYSTRUC);
-
-    DWORD		dwContainerNameLen=MAX_UNIQNAME_LEN+1;
+    BN_ULONG    *p;
+    BN_ULONG	*key_n, *key_p, *key_q, *key_dmp1, *key_dmq1, *key_iqmp, *key_d;
     DWORD		l=0;
     extern int 	debugPrint;
 
+    assert(BN_BYTES == sizeof(BN_ULONG));
 
     // setup PUBLICKEYSTRUC (aka BLOBHEADER) first
 
+    log_printf("BN_BYTES = %d, BN_BITS2 = %d\n", BN_BYTES, BN_BITS2);
+
     *pcbPk = 0;
-    l = sizeof(PRIVKEYBLOB)-1 + BN_BYTES *
-        ( key->n->top
-          + key->p->top
-          + key->q->top
-          + key->dmp1->top
-          + key->dmq1->top
-          + key->iqmp->top
-          + key->d->top
-          );
-    *ppk = (BYTE *)Malloc(l);
+    l = sizeof(PRIVKEYBLOB) - sizeof(BN_ULONG) + 
+        keybits/8 + // modulus[KEYBITS/8];			// "n"
+        keybits/16 +// prime1[KEYBITS/16];			// "p"
+        keybits/16 +// prime2[KEYBITS/16];			// "q"
+        keybits/16 +// exponent1[KEYBITS/16];		// "dmp1"
+        keybits/16 +// exponent2[KEYBITS/16];		// "dmq1"
+        keybits/16 +// coefficient[KEYBITS/16];	    // "iqmp"
+        keybits/8;  // privateExponent[KEYBITS/8];	// "d"
+    *ppk = (BYTE *)malloc(l);
     pk = (PRIVKEYBLOB *)*ppk;
     if (!pk)
     {
         return 0;
     }
-
+    memset(pk, 0, l);
     *pcbPk = l;
     pk->blobheader.bType=	0x07;			// PRIVATEKEYBLOB
     pk->blobheader.bVersion=	0x02;			// CUR_BLOB_VERSION
@@ -223,14 +221,26 @@ int rsa_to_keyblob(int keybits, RSA *key, BYTE	**ppk, DWORD *pcbPk)
     log_printf("\n");
 
     // and finally, the KEY-INFO itself (n, p, q, dmp1, dmpq1, iqmp, & d)
+    key_n	 = p  = &pk->beginning[0];   
+    memcpy(p,  key->n->d,	  BN_BYTES * key->n->top);
+   
+    key_p	 = p += (keybits/BN_BYTES/8);  
+    memcpy(p,	key->p->d,	  BN_BYTES * key->p->top);
 
-    key_n	= p  = &pk->beginning[0]; memcpy(p,     key->n->d,	  BN_BYTES * key->n->top);
-    key_p	= p += key->n->top;       memcpy(p,	key->p->d,	  BN_BYTES * key->p->top);
-    key_q	= p += key->p->top;	  memcpy(p,	key->q->d,	  BN_BYTES * key->q->top);
-    key_dmp1= p += key->q->top;		  memcpy(p,	key->dmp1->d,     BN_BYTES * key->dmp1->top);
-    key_dmq1= p += key->dmp1->top;	  memcpy(p,	key->dmq1->d,     BN_BYTES * key->dmq1->top);
-    key_iqmp= p += key->dmq1->top;	  memcpy(p,	key->iqmp->d,     BN_BYTES * key->iqmp->top);
-    key_d	= p += key->iqmp->top;	  memcpy(p,	key->d->d,	  BN_BYTES * key->d->top);
+    key_q	 = p += (keybits/BN_BYTES/16); 
+    memcpy(p,	key->q->d,	  BN_BYTES * key->q->top);
+
+    key_dmp1 = p += (keybits/BN_BYTES/16); 
+    memcpy(p,	key->dmp1->d, BN_BYTES * key->dmp1->top);
+
+    key_dmq1 = p += (keybits/BN_BYTES/16); 
+    memcpy(p,	key->dmq1->d, BN_BYTES * key->dmq1->top);
+   
+    key_iqmp = p += (keybits/BN_BYTES/16); 
+    memcpy(p,	key->iqmp->d, BN_BYTES * key->iqmp->top);
+
+    key_d	 = p += (keybits/BN_BYTES/16); 
+    memcpy(p,	key->d->d,	  BN_BYTES * key->d->top);
 
     if (debugPrint)
     {

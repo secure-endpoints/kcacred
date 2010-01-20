@@ -67,7 +67,7 @@
  */
 
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -184,13 +184,13 @@ void b64_dodecode_padding(char *bitstring, int pad, char *out, int *b64_cnt)
 
 void _b64_init(void)
 {
-    unsigned char i;
+    int i;
 
     for (i=0; i<256; i++)
 	b64_decoding[i]='\0';
 
     for (i=0; i<64; i++)
-	b64_decoding[b64_encoding[i]]=i;
+	b64_decoding[b64_encoding[i]]=(char)i;
 
     b64_init_done++;
     return;

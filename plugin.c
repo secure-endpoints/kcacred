@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2010 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -56,6 +56,10 @@ khm_handle csp_params = NULL;
    but conditionally use the newer functionality if the plug-in is
    loaded by a newer version of Network Identity Manager. */
 
+#if KH_VERSION_API < 12
+
+HMODULE hm_netidmgr;
+
 #if KH_VERSION_API < 7
 
 /* declarations from version 7 of the API */
@@ -76,12 +80,17 @@ khm_int32
                                      void * rock);
 #endif
 
-#if KH_VERSION_API < 12
-
-HMODULE hm_netidmgr;
-
 khm_int32
 (KHMAPI * pkhui_cw_get_primary_id)(khui_new_creds *, khm_handle *);
+
+khm_int32
+(KHMAPI * pkhui_cw_get_result)(khui_new_creds * c);
+
+khui_nc_subtype
+(KHMAPI * pkhui_cw_get_subtype)(khui_new_creds * c);
+
+khui_action_context *
+(KHMAPI * pkhui_cw_get_ctx)(khui_new_creds * c);
 
 khm_int32 KHMAPI
 int_khui_cw_get_primary_id(khui_new_creds * nc, khm_handle * h)
@@ -94,9 +103,27 @@ int_khui_cw_get_primary_id(khui_new_creds * nc, khm_handle * h)
     *h = NULL;
     return KHM_ERROR_NOT_FOUND;
 }
+
+khm_int32 KHMAPI
+int_khui_cw_get_result(khui_new_creds * nc)
+{
+    return nc->result;
+}
+
+khui_nc_subtype KHMAPI
+int_khui_cw_get_subtype(khui_new_creds * nc)
+{
+    return nc->subtype;
+}
+
+khui_action_context * KHMAPI
+int_khui_cw_get_ctx(khui_new_creds * nc)
+{
+    return &nc->ctx;
+}
+
+
 #endif
-
-
 
 /* Handler for system messages.  The only two we handle are
    KMSG_SYSTEM_INIT and KMSG_SYSTEM_EXIT. */
@@ -152,10 +179,25 @@ handle_kmsg_system(khm_int32 msg_type,
 #endif
                 pkhui_cw_get_primary_id = (khm_int32 (KHMAPI *)(khui_new_creds *, khm_handle *))
                     GetProcAddress(hm_netidmgr, API_khui_cw_get_primary_id);
+                pkhui_cw_get_result = (khm_int32 (KHMAPI *)(khui_new_creds *))
+                    GetProcAddress(hm_netidmgr, API_khui_cw_get_result);
+                pkhui_cw_get_subtype = (khui_nc_subtype (KHMAPI *)(khui_new_creds *))
+                    GetProcAddress(hm_netidmgr, API_khui_cw_get_subtype);
+                pkhui_cw_get_ctx = (khui_action_context * (KHMAPI *)(khui_new_creds *))
+                    GetProcAddress(hm_netidmgr, API_khui_cw_get_ctx);
             } while (FALSE);
 
             if (pkhui_cw_get_primary_id == NULL)
               pkhui_cw_get_primary_id = int_khui_cw_get_primary_id;
+
+            if (pkhui_cw_get_result == NULL)
+                pkhui_cw_get_result = int_khui_cw_get_result;
+
+            if (pkhui_cw_get_subtype == NULL)
+                pkhui_cw_get_subtype = int_khui_cw_get_subtype;
+
+            if (pkhui_cw_get_ctx == NULL)
+                pkhui_cw_get_ctx = int_khui_cw_get_ctx;
 #endif
 
             /* Add the icon now.  On NIM v2.x, doing so after tokens
@@ -356,7 +398,7 @@ handle_kmsg_system(khm_int32 msg_type,
             creg.h_module = hResModule;
             creg.dlg_template = MAKEINTRESOURCE(IDD_CONFIG_ID);
             creg.dlg_proc = config_id_dlgproc;
-            creg.flags = KHUI_CNFLAG_SUBPANEL | KHUI_CNFLAG_PLURAL;
+            creg.flags = KHUI_CNFLAG_SUBPANEL | KHUI_CNFLAG_INSTANCE;
 
             khui_cfg_register(cnode, &creg);
 
@@ -387,12 +429,14 @@ handle_kmsg_system(khm_int32 msg_type,
                 khm_handle h_sub = NULL;
 
 #if KH_VERSION_API < 7
+
                 if (pkhui_action_lock == NULL ||
                     pkhui_action_unlock == NULL ||
                     pkhui_refresh_actions == NULL ||
                     pkhui_request_UI_callback == NULL)
 
                     goto no_custom_help;
+
 #endif
 
                 kmq_create_subscription(plugin_msg_proc, &h_sub);

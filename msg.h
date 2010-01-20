@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -64,9 +64,9 @@
 
 typedef struct _msg {
 	BUFF	m_data;
-	WORD	m_maxlen;
-	WORD	m_curpos;
-	WORD	m_curlen;
+	DWORD	m_maxlen;
+	DWORD	m_curpos;
+	DWORD	m_curlen;
 } KX_MSG;
 
 int msg_place_cksum(KX_MSG *msg);
@@ -85,13 +85,13 @@ int msg_ck_mutauth(KX_MSG *msg, void *sess_key, WORD mutauth_in);
 
 #define MSG_APPEND(msg, new, new_len)	( (((msg)->m_curlen+new_len) > (msg)->m_maxlen) \
 						? -1					\
-						: (long)memcpy(&((msg)->m_data[(msg)->m_curlen]),(char *)new,new_len),	\
+						: (LONG_PTR)memcpy(&((msg)->m_data[(msg)->m_curlen]),(char *)new,new_len),	\
 						  (msg)->m_curlen += new_len,		\
 						  0 )
 
 #define MSG_PULL(msg, to, to_cnt)	( (((msg)->m_curpos+to_cnt) > (msg)->m_curlen)	\
 						? -1 					\
-						: (long)memcpy((char *)to,&((msg)->m_data[(msg)->m_curpos]),to_cnt),	\
+						: (LONG_PTR)memcpy((char *)to,&((msg)->m_data[(msg)->m_curpos]),to_cnt),	\
 						  (msg)->m_curpos += to_cnt,		\
 						  0 )
 

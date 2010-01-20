@@ -31,6 +31,12 @@
 
 #include "..\kcaexports.h"
 
+/* Internals */
+KHMEXP khm_int32 KHMAPI kmq_init(void);
+KHMEXP khm_int32 KHMAPI kmq_exit(void);
+KHMEXP void KHMAPI khui_init_actions(void);
+KHMEXP void KHMAPI khui_exit_actions(void);
+
 KCAPluginExports e;
 
 void
@@ -46,7 +52,71 @@ do_tests(void)
     (*e.list_creds)();
 }
 
-int main(int argc, char ** argv)
+static char g_realm[256]="WINDOWS.SECURE-ENDPOINTS.COM";
+static char g_ccname[280]="API:jaltman@WINDOWS.SECURE-ENDPOINTS.COM";
+static char g_hostlist[2048]="www.secure-endpoints.com";
+static int  g_nattempts=10000;
+
+void parse_args(int argc, char *argv[])
+{
+    /* nothing to do yet */
+    ;
+}
+
+void stress_test_kca(void)
+{
+    RSA         *rsa;
+    int         keybits;
+    X509        *x509;
+    char        msg[1024]="";
+    int         i;
+    char        subject[2048], issuer[2048], *serial_str;
+    ASN1_INTEGER *asn;
+    DWORD       rc;
+    BYTE * pk;
+    DWORD  cbPk;
+
+    for (i=0; i<g_nattempts; i++) {
+        rsa = NULL;
+        x509 = NULL;
+        serial_str = NULL;
+
+        printf("Attempt %d of %d\n", i, g_nattempts);
+
+        rc = (e.getcert)(&rsa, &keybits, &x509, msg, (int)sizeof(msg), 
+                        g_realm, (int)sizeof(g_realm),
+                        g_ccname, NULL);
+
+        if (rc == 0) 
+        {
+            X509_NAME_oneline(X509_get_subject_name(x509), subject, sizeof(subject));
+
+            X509_NAME_oneline(X509_get_issuer_name(x509), issuer, sizeof(issuer));
+
+            asn = X509_get_serialNumber(x509);
+            serial_str = i2s_ASN1_INTEGER(NULL, asn);
+            printf("Got cert (keylength=%d):(serial=%s):\nissuer=%s\nsubject=%s\n",
+                   keybits,serial_str,issuer,subject);
+
+            if ((e.rsa_to_keyblob)(keybits, rsa, &pk, &cbPk))
+            {
+                if (!(e.store_key)(pk, cbPk, L"kcacred-test"))
+                    printf("Store key failed\n");
+
+                (e.free)(pk);
+            }
+
+            (e.clean_cert)(rsa, x509);
+
+            OPENSSL_free(serial_str);
+            printf("\n");
+        } else {
+            printf("Failure 0x%x\n\n", rc);
+        }
+    }
+}
+
+int main(int argc, char *argv[])
 {
     PDESCTHREAD(L"UI",L"App");
 
@@ -67,7 +137,9 @@ int main(int argc, char ** argv)
         goto _exit;
     }
 
-    do_tests();
+    parse_args(argc, argv);
+
+    stress_test_kca();
 
  _exit:
     kmm_exit();

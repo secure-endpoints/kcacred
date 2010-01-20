@@ -86,13 +86,13 @@ Makefile: Makefile.in ../config.status
 
 $(LIBRARY):	$(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $(LIBRARY).$(MINOR) $(LIBOBJS) $(LIBS)
-	rm -f $(BASELIB); ln -s $(LIBRARY).$(MINOR) $(BASELIB)
-	rm -f $(LIBRARY); ln -s $(LIBRARY).$(MINOR) $(LIBRARY)
+	-rm -f $(BASELIB); ln -s $(LIBRARY).$(MINOR) $(BASELIB)
+	-rm -f $(LIBRARY); ln -s $(LIBRARY).$(MINOR) $(LIBRARY)
 
 clean:	
-	rm -rf *.o lib $(BASELIB) $(LIBRARY) $(LIBRARY).$(MINOR) pkcs11.tar.gz
+	-rm -rf *.o lib $(BASELIB) $(LIBRARY) $(LIBRARY).$(MINOR) pkcs11.tar.gz
 
 install: $(LIBRARY)
-	rm -f $(libdir)/$(LIBRARY).$(MINOR); $(INSTALL) $(LIBRARY).$(MINOR) $(libdir)
-	rm -f $(libdir)/$(LIBRARY); ln -s $(libdir)/$(LIBRARY).$(MINOR) $(libdir)/$(LIBRARY)
-	rm -f $(libdir)/$(BASELIB); ln -s $(libdir)/$(LIBRARY).$(MINOR) $(libdir)/$(BASELIB)
+	-rm -f $(libdir)/$(LIBRARY).$(MINOR); $(INSTALL) $(LIBRARY).$(MINOR) $(libdir)
+	-rm -f $(libdir)/$(LIBRARY); ln -s $(libdir)/$(LIBRARY).$(MINOR) $(libdir)/$(LIBRARY)
+	-rm -f $(libdir)/$(BASELIB); ln -s $(libdir)/$(LIBRARY).$(MINOR) $(libdir)/$(BASELIB)

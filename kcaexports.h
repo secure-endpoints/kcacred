@@ -41,7 +41,7 @@ typedef struct _KCAPluginExports {
     /* OUT */
 
     int
-    (*getcert)(RSA **, X509 **, char *, int, char *, int, char *, char *);
+    (*getcert)(RSA **, int *, X509 **, char *, int, char *, int, char *, char *);
 
     void
     (*clean_cert)(RSA *, X509 *);
@@ -60,6 +60,13 @@ typedef struct _KCAPluginExports {
 
     void
     (*list_creds)(void);
+
+    int 
+    (*rsa_to_keyblob)(int keybits, RSA *key, BYTE **ppk, DWORD *pcbPk);
+
+    void
+    (*free)(void *);
+
 } KCAPluginExports;
 
 #define KCAPluginExportsMagic 0xd341f4a0

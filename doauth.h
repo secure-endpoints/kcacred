@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -59,9 +59,10 @@
 #define MAX_CERT_LEN	4096
 
 #define DEFBITS 1024
+#define MAXBITS 16384
 
 int
-getcert(RSA **, X509 **, char *, int, char *, int, char *, char *);
+getcert(RSA **, int *, X509 **, char *, int, char *, int, char *, char *);
 
 void
 clean_cert(RSA *, X509 *);
@@ -86,4 +87,3 @@ store_key(BYTE *p, DWORD cbPk, wchar_t * container);
 
 int
 store_cert(BYTE *cert, DWORD len, wchar_t * container);
-

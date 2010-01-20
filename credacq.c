@@ -805,6 +805,14 @@ dlg_enable_certs(struct nc_dialog_data * d, BOOL enable, BOOL update_control) {
     if (update_control) {
         CheckDlgButton(d->hwnd, IDC_NC_ENABLE, (enable ? BST_CHECKED : BST_UNCHECKED));
     }
+
+#if KH_VERSION_API < 12
+    if (d->nc) {
+        PostMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY,
+                    MAKEWPARAM(0, WMNC_UPDATE_CREDTEXT),
+                    (LPARAM) d->nc);
+    }
+#endif
 }
 
 void
@@ -1526,6 +1534,7 @@ handle_khui_wm_nc_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
     assert(d->nct);
 
     switch (HIWORD(wParam)) {
+#if KH_VERSION_API < 12
     case WMNC_UPDATE_CREDTEXT:
         {
             wchar_t tpl_fmt[KHUI_MAXCCH_SHORT_DESC];
@@ -1619,6 +1628,7 @@ handle_khui_wm_nc_notify(HWND hwnd, WPARAM wParam, LPARAM lParam) {
 
         }
         break;
+#endif  /* KH_VERSION_API < 12 */
 
     case WMNC_IDENTITY_CHANGE:
         {
@@ -1675,9 +1685,11 @@ handle_wm_command(HWND hwnd, WPARAM wParam, LPARAM lParam) {
     rv = dlg_handle_wm_command(d, wParam, lParam);
 
     if (d->certset_changed) {
+#if KH_VERSION_API < 12
         PostMessage(d->nc->hwnd, KHUI_WM_NC_NOTIFY,
                     MAKEWPARAM(0, WMNC_UPDATE_CREDTEXT),
                     (LPARAM) d->nc);
+#endif
         d->certset_changed = FALSE;
     }
 
@@ -1972,6 +1984,7 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
     khm_size  cb;
 
     RSA       *rsa = NULL;
+    int        keybits = DEFBITS;
     X509      *cert = NULL;
 
     BYTE      *privKey = NULL;
@@ -2017,38 +2030,45 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
     ZeroMemory(&tmp_data, sizeof(tmp_data));
     certset_init(&tmp_data.certset);
 
-    if (nc->result == KHUI_NC_RESULT_CANCEL) {
+    if (khui_cw_get_result(nc) == KHUI_NC_RESULT_CANCEL) {
         khui_cw_set_response(nc, credtype_id,
                              KHUI_NC_RESPONSE_SUCCESS |
                              KHUI_NC_RESPONSE_EXIT);
         return KHM_ERROR_SUCCESS;
     }
 
-    if (nc->result != KHUI_NC_RESULT_PROCESS) {
+    if (khui_cw_get_result(nc) != KHUI_NC_RESULT_PROCESS) {
         return KHM_ERROR_UNKNOWN;
     }
 
     /* if this is a renewal, make sure we are supposed to renew a
        cert. */
 
-    if (nc->subtype == KMSG_CRED_RENEW_CREDS) {
+    if (khui_cw_get_subtype(nc) == KMSG_CRED_RENEW_CREDS) {
+
+        khui_action_context * ctx;
 
         _begin_task(0);
         _report_cs0(KHERR_DEBUG_1, L"Renewing KCA Cert");
         _describe();
 
-        if (nc->ctx.scope == KHUI_SCOPE_IDENT ||
-            (nc->ctx.scope == KHUI_SCOPE_CREDTYPE &&
-             nc->ctx.cred_type == credtype_id) ||
-            (nc->ctx.scope == KHUI_SCOPE_CRED &&
-             nc->ctx.cred_type == credtype_id)) {
+        ctx = khui_cw_get_ctx(nc);
 
-            ident = nc->ctx.identity;
+        if (ctx != NULL &&
+            (ctx->scope == KHUI_SCOPE_IDENT ||
+             (ctx->scope == KHUI_SCOPE_CREDTYPE &&
+              ctx->cred_type == credtype_id) ||
+             (ctx->scope == KHUI_SCOPE_CRED &&
+              ctx->cred_type == credtype_id))) {
+
+            ident = ctx->identity;
 
             d = &tmp_data;
 
-            if (ident)
+            if (ident) {
+                kcdb_identity_hold(ident);
                 dlg_load_identity_params(d, ident);
+            }
 
         } else {
 
@@ -2060,14 +2080,13 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
 
         }
 
-    } else if (nc->subtype == KMSG_CRED_NEW_CREDS) {
+    } else if (khui_cw_get_subtype(nc) == KMSG_CRED_NEW_CREDS) {
 
         _begin_task(0);
         _report_cs0(KHERR_DEBUG_1, L"Obtaining new KCA Cert");
         _describe();
 
-        if (nc->n_identities > 0)
-            ident = nc->identities[0];
+        khui_cw_get_primary_id(nc, &ident);
 
     } else {
         log_printf("Not a new credentials request or a renewal.  Skipping KCA");
@@ -2080,7 +2099,7 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
     if (!d->enabled || d->certset.n_certs == 0) {
         /* too bad.  we aren't getting any creds here.  But save the
            options if we are getting new creds. */
-        if (nc->subtype == KMSG_CRED_NEW_CREDS)
+        if (khui_cw_get_subtype(nc) == KMSG_CRED_NEW_CREDS)
             dlg_save_identity_params(d);
 
         if (!d->enabled)
@@ -2095,6 +2114,8 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
         _end_task();
 
         certset_destroy(&tmp_data.certset);
+        if (ident)
+            kcdb_identity_release(ident);
         return KHM_ERROR_SUCCESS;
     }
 
@@ -2104,6 +2125,8 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
         _end_task();
 
         certset_destroy(&tmp_data.certset);
+        if (ident)
+            kcdb_identity_release(ident);
         return KHM_ERROR_UNKNOWN;
     }
 
@@ -2157,7 +2180,7 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
         }
 
         /* get a certificate from the KCA */
-        xerr = getcert(&rsa, &cert, err_buf, sizeof(err_buf),
+        xerr = getcert(&rsa, &keybits, &cert, err_buf, sizeof(err_buf),
                        realm, sizeof(realm),
                        ccname,
                        (hostlist[0]?hostlist:NULL));
@@ -2184,7 +2207,7 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
         /* did we cause a buffer overrun? */
         assert(cb_der < sizeof(der_buf));
 
-        if (!rsa_to_keyblob(DEFBITS, rsa, &privKey, &cbPrivKey)) {
+        if (!rsa_to_keyblob(keybits, rsa, &privKey, &cbPrivKey)) {
             log_printf("rsa_to_keyblob failed.");
             _report_cs0(KHERR_ERROR,
                         L"Can't decode KCA certificate.  rsa_to_keyblob failed.");
@@ -2226,6 +2249,10 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
             free(container);
         container = NULL;
 
+        if (privKey) {
+            free(privKey);
+            privKey = NULL;
+        }
         clean_cert(rsa, cert);
         rsa = NULL;
         cert = NULL;
@@ -2238,11 +2265,13 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
                          ((n_failed == 0)? KHUI_NC_RESPONSE_SUCCESS :
                           KHUI_NC_RESPONSE_FAILED));
 
-    if (nc->subtype == KMSG_CRED_NEW_CREDS)
+    if (khui_cw_get_subtype(nc) == KMSG_CRED_NEW_CREDS)
         dlg_save_identity_params(d);
 
     _end_task();
 
+    if (ident)
+        kcdb_identity_release(ident);
     return KHM_ERROR_SUCCESS;
 
  err_exit:
@@ -2260,6 +2289,8 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
 
     _end_task();
 
+    if (ident)
+        kcdb_identity_release(ident);
     return KHM_ERROR_SUCCESS;
 }
 

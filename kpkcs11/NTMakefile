@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006 Secure Endpoints Inc.
+# Copyright (c) 2006-2008 Secure Endpoints Inc.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -41,7 +41,7 @@ AUXCFLAGS = /J /Zc:wchar_t /Zc:forScope /Gd /GR /Gy /GL	/FD /EHsc /O2 /Wp64 /err
 VERMAJOR=0
 VERMINOR=5
 VERAUX  =0
-VERPATCH=0
+VERPATCH=2
 !ELSE
 # Check if we were given all the version info macros we need
 !  IF !DEFINED(VERMINOR) || !DEFINED(VERAUX) || !DEFINED(VERPATCH)
@@ -59,18 +59,6 @@ VERLISTC=$(VERMAJOR),$(VERMINOR),$(VERAUX),$(VERPATCH)
 ! error OPENSSLDIR environment variable not set.
 !endif
 
-!if !exist($(OPENSSLDIR)\lib)
-!if exist($(OPENSSLDIR)\out64dll)
-OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
-!elseif exist($(OPENSSLDIR)\out32dll)
-OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
-!else
-OPENSSLLIBDIR=$(OPENSSLDIR)\out32
-!endif
-!else
-OPENSSLLIBDIR=$(OPENSSLDIR)\lib
-!endif
-
 # Directories
 
 BUILDROOT=.
@@ -85,8 +73,36 @@ DEBUG=1
 !endif
 
 
+!if !defined(CPU)
+!if "$(PROCESSOR_ARCHITECTURE)" == "x86"
+CPU = i386
+!endif
+!if "$(PROCESSOR_ARCHITECTURE)" == "AMD64"
+CPU = AMD64
+!endif
+!endif
+
 !ifndef CPU
 !error Environment variable 'CPU' is not defined.
+!endif
+
+!if "$(CPU)" == "AMD64"
+!if exist($(OPENSSLDIR)\out64dll)
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64
+!endif
+!endif
+!if "$(CPU)" == "i386"
+!if exist($(OPENSSLDIR)\out32dll)
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32
+!endif
+!endif
+
+!if !defined(OPENSSLLIBDIR)
+!error 'OPENSSLLIBDIR' cannot be determined.
 !endif
 
 # Note that DEST has to point to the same directory as KPKCS11DEST in
@@ -126,7 +142,7 @@ cwarn=/WX
 cwarn=
 !endif
 
-C2OBJ=$(CC) $(cvarsdll) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS)  /Fo"$@" /c $**
+C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS)  /Fo"$@" /c $**
 
 !ifdef DEBUG
 DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /OPT:NOWIN98 /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
@@ -158,8 +174,9 @@ mkdirs::
 !endif
 
 clean::
-	$(RM) "$(OBJ)\*.*"
-	$(RM) "$(DEST)\*.*"
+	-$(RM) "$(OBJ)\*.*"
+	-$(RM) "$(DEST)\*.*"
+        -$(RM) "*.pdb"
 
 .SUFFIXES: .h
 
@@ -248,7 +265,7 @@ $(CONFIGHEADER): NTMakefile
 <<
 
 clean::
-	$(RM) $(CONFIGHEADER)
+	-$(RM) $(CONFIGHEADER)
 
 $(DLL): $(OBJFILES) $(DLLRESFILE)
 	$(DLLGUILINK) $(LIBFILES)
@@ -256,7 +273,7 @@ $(DLL): $(OBJFILES) $(DLLRESFILE)
 #	$(_VC_MANIFEST_CLEAN)
 
 clean::
-	$(RM) $(DLL)
+	-$(RM) $(DLL)
 
 
 
@@ -282,4 +299,4 @@ $(OBJ)\kpkcs11.wixobj: installer\kpkcs11.wxs $(DLL)
 	-out $@ installer\kpkcs11.wxs
 
 clean::
-	$(RM) $(MSIFILE)
+	-$(RM) $(MSIFILE)

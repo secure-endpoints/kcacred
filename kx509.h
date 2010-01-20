@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2008 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -69,9 +69,9 @@
 
 #define MAX_UDP_PAYLOAD_LEN	4000		/* must fit in UDP payload */
 
-#define MAX_AUTHENT_LEN		1250		/* mumbly foo made up value == MAX_KTXT_LEN */
-#define MAX_PUBKEY_LEN		1000		/* mumbly foo made up value... */
-#define	MAX_X509_CERT_LEN	1250		/* mumbly foo made up value... */
+#define MAX_AUTHENT_LEN		3000		/* mumbly foo made up value == MAX_KTXT_LEN */
+#define MAX_PUBKEY_LEN		2048		/* mumbly foo made up value... */
+#define	MAX_X509_CERT_LEN	3988		/* mumbly foo made up value... */
 
 /*
  * KX509_STATUS_###
@@ -100,6 +100,8 @@
 							/* ex. server overloaded */
 #define KX509_STATUS_CLNT_IGN   6               /* Client-side permanent problem */
                                                         /* ignore - No KCA list */
+#define KX509_STATUS_SRVR_KEY   7               /* Public keylength too short */
+
 #ifdef macintosh
 #define KSUCCESS 0
 #define KFAILURE 255

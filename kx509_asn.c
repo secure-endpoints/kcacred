@@ -57,6 +57,7 @@
  * we don't impose this in the grammar because it adds
  * to the complexity and limits flexiblity.
  */
+
 #include <stdio.h>
 #if 0
 #include "cryptlib.h"
@@ -77,9 +78,6 @@
 #define d2i_ASN1_VISIBLESTRING(a,pp,l)	d2i_ASN1_bytes((ASN1_STRING **)(a),(pp),(l),V_ASN1_VISIBLESTRING,V_ASN1_UNIVERSAL)
 #define ASN1_VISIBLESTRING_free(a)	ASN1_STRING_free((ASN1_STRING*)(a))
 #endif
-
-#pragma warning(push)
-#pragma warning(disable: 4244)
 
 /*
  *	Allocate a new request with null strings.
@@ -231,6 +229,12 @@ i2d_KX509_RESPONSE(KX509_RESPONSE *a, unsigned char **pp)
 	M_ASN1_I2D_finish();
 }
 
+/* Disable possible loss of data warnings caused by OpenSSL macros */
+#ifdef WIN32
+#pragma warning(push)
+#pragma warning(disable:4244)
+#endif
+
 /*
  *	decode a kx509 request
  *
@@ -351,4 +355,6 @@ bin_dump(c.q, c.p-c.q);
 #endif
 }
 
+#ifdef WIN32
 #pragma warning(pop)
+#endif

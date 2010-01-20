@@ -111,34 +111,9 @@
 
 char version_2_0_string[4]={0,0,2,0};
 
-#define	MAX_MSG_LEN	2048
 #define RECV_TIMEOUT	5
 #define SEND_TIMEOUT	5
 #define MAX_KCA_HOSTS	16
-
-#if 0
-#if defined(WIN32) && !defined(USE_KRB5)
-/* I don't know if WIN32 defines this or not, but if not, here it is... */
-# ifndef MAX_KTXT_LEN
-#  define MAX_KTXT_LEN 1250
-# endif
-# ifndef ANAME_SZ
-#  define ANAME_SZ	40
-# endif
-# ifndef REALM_SZ
-#  define REALM_SZ	40
-# endif
-# ifndef SNAME_SZ
-#  define SNAME_SZ	40
-# endif
-# ifndef INST_SZ
-#  define INST_SZ	40
-# endif
-# ifndef KSUCCESS
-#  define KSUCCESS	0
-# endif
-#endif	/* WIN32 && !USE_KRB5 */
-#endif
 
 #if SSLEAY_VERSION_NUMBER > 0x0090601eL
 # define ADD_ALL_ALGORITHMS		OpenSSL_add_all_algorithms
@@ -199,6 +174,8 @@ get_cert_authent_K5(krb5_context k5_context,
 		    krb5_data *k5_authent,
 		    char sess_key_result[],
 		    int *sess_len_ptr,
+                    time_t *k5_endtime,
+                    time_t *k5_renew_till,
 		    char *realm,
 		    char *tkt_cache_name,
 		    char **err_ptr)
@@ -308,6 +285,8 @@ get_cert_authent_K5(krb5_context k5_context,
     }
     *sess_len_ptr = outcreds->keyblock.length;
     memcpy(sess_key_result, outcreds->keyblock.contents, outcreds->keyblock.length);
+    *k5_endtime   = outcreds->times.endtime;
+    *k5_renew_till = outcreds->times.renew_till;
 
   cleanup:
     if (k5_auth_context)
@@ -328,32 +307,33 @@ get_cert_authent_K5(krb5_context k5_context,
  * Request a certificate from a particular KCA.
  * If we haven't already generated a key-pair, do that now.
  * If using K5, we need a different authenticator for each
- * CA we contact.  If using K4, then we can use the same one
- * for each CA.  We use the session key to seed the generation
+ * CA we contact.  We use the session key to seed the generation
  * of the key-pair.
  *
  *=========================================================================*
  */
 int try_ca(krb5_context k5_context,
-           SOCKET	socket,				/* IN Socket to be used to communicate with CA */
-           char	*ca_hostname,		/* IN Host name of the the CA to try */
-           char 	*realm,				/* IN Realm name */
-           RSA		**rsa,				/* IN/OUT key-pair information */
-           X509	**certp,			/* OUT certificate information */
-           int (*verify_recvd_packet)(),/*IN routine to call to verify the CA response */
-           void	*arg,				/* IN Arguments passed to verification routine */
-           char	sess_key[],			/* IN/OUT session key holder */
+           SOCKET	socket,			/* IN Socket to be used to communicate with CA */
+           char	        *ca_hostname,		/* IN Host name of the the CA to try */
+           char 	*realm,			/* IN Realm name */
+           RSA		**rsa,			/* IN/OUT key-pair information */
+           X509	        **certp,		/* OUT certificate information */
+           int          keybits,                /* IN length of private key */
+           int (*verify_recvd_packet)(),        /*IN routine to call to verify the CA response */
+           void	        *arg,			/* IN Arguments passed to verification routine */
+           char	        sess_key[],		/* IN/OUT session key holder */
            int		*sess_len_ptr,		/* IN/OUT length of session key */
-           char    *tkt_cache_name,		/* IN credential cache file name */
-           char	**emsg,				/* IN/OUT error string buffer */
+           char         *tkt_cache_name,	/* IN credential cache file name */
+           char	        **emsg,			/* IN/OUT error string buffer */
            int		*err_num_ptr		/* OUT Error value recipient */
 )
 {
-    int			keybits=DEFBITS;	/* Number of bits in the public key / private key */
     fd_set		readfds;
     struct hostent	*ca_hostent = NULL;
     struct sockaddr_in  ca_addr;
     struct timeval	timeout;
+    time_t              start_t;
+    long                wait;
     DWORD		i;
     KX_MSG		pkt_to_send;
     KX_MSG		pkt_recvd;
@@ -361,13 +341,15 @@ int try_ca(krb5_context k5_context,
     char		*pubkey_ptr = NULL;
     unsigned char	*tmp_ptr = NULL;
     int			pubkey_len = 0;
-    int		len;
-    static int	triedAuthent = 0;
-    int		rc = 0;
+    int		        len;
+    static int	        triedAuthent = 0;
+    int		        rc = 0;
 
-    krb5_data	k5_authent;
-    char 	lbuffer[2048];
-    char 	buffer[2048];
+    krb5_data	        k5_authent;
+    time_t              k5_endtime = 0;
+    time_t              k5_renew_till = 0;
+    char 	        lbuffer[2048];
+    char 	        buffer[2048];
 
     *err_num_ptr = 0;
     memset(&k5_authent, 0, sizeof(k5_authent));
@@ -378,7 +360,8 @@ int try_ca(krb5_context k5_context,
 
     /* For K5, we always generate a new authenticator for the host we are contacting */
     if (rc = get_cert_authent_K5(k5_context, ca_hostname, &k5_authent, sess_key,
-                                 sess_len_ptr, realm, tkt_cache_name, emsg)) {
+                                 sess_len_ptr, &k5_endtime, &k5_renew_till, 
+                                 realm, tkt_cache_name, emsg)) {
         goto cleanup;
     }
 
@@ -485,12 +468,6 @@ int try_ca(krb5_context k5_context,
 	goto cleanup;
     }
 
-    /* SOMETHINGS LISTENING -- SEND PACKET */
-
-    i = udp_nb_send(socket, &pkt_to_send);
-    log_printf("try_ca: sent KX_CLNT_PKT of %0d bytes (rc = %d) \n",
-               pkt_to_send.m_curlen, i);
-
     /* RECV WIRE-VERSION OF KX_SRVR_PKT FROM CA SERVER */
 
     if (MSG_ALLOC(&pkt_recvd, MAX_KSP_LEN)) {
@@ -500,26 +477,38 @@ int try_ca(krb5_context k5_context,
 	goto cleanup;
     }
 
-    /* WAIT UP TO "KX509_CLIENT_TIMEOUT" SECONDS FOR RESPONSE */
+    /* In case of packet loss, re-send the request with an exponential fall off */
+    for (i = 0, start_t = time(NULL), wait = 4; time(NULL) < start_t + KX509_CLIENT_TIMEOUT; wait *= 2) {
+        /* SOMETHING IS LISTENING -- SEND PACKET */
+        i = udp_nb_send(socket, &pkt_to_send);
+        log_printf("try_ca: sent KX_CLNT_PKT of %0d bytes (rc = %d) \n",
+                   pkt_to_send.m_curlen, i);
 
-    FD_ZERO(&readfds);
-    FD_SET((WORD)socket, &readfds);
-    timeout.tv_sec = KX509_CLIENT_TIMEOUT;
-    timeout.tv_usec = 0;
-    i = udp_nb_select(&readfds, NULL, NULL, &timeout);
-    if (i<0) {
-		DWORD gle = WSAGetLastError();
-        StringCbCopyA(buffer, sizeof(buffer), wsa_strerror(gle));
-        log_printf("try_ca: udp_nb_select failed with code %d, errno %d ('%s')\n",
-                   i, errno, buffer);
-        *emsg = "Error return waiting for response.";
-        rc = (*err_num_ptr = KX509_STATUS_CLNT_TMP);
-	goto cleanup;
-    } else if (i==0) {
+        /* WAIT UP TO "KX509_CLIENT_TIMEOUT" SECONDS FOR RESPONSE */
+        FD_ZERO(&readfds);
+        FD_SET((WORD)socket, &readfds);
+        timeout.tv_sec = wait;
+        timeout.tv_usec = 0;
+        i = udp_nb_select(&readfds, NULL, NULL, &timeout);
+        if (i < 0) {
+            DWORD gle = WSAGetLastError();
+            StringCbCopyA(buffer, sizeof(buffer), wsa_strerror(gle));
+            log_printf("try_ca: udp_nb_select failed with code %d, errno %d ('%s')\n",
+                       i, errno, buffer);
+            *emsg = "Error return waiting for response.";
+            rc = (*err_num_ptr = KX509_STATUS_CLNT_TMP);
+            goto cleanup;
+        } else if (i > 0) {
+            /* got a response */
+            break;
+        }
+    }
+    
+    if (i==0) {
         log_printf("try_ca: timeout during udp_nb_select\n");
         *emsg = "Timed out waiting for response from a Kerberized Certificate Authority";
         rc = (*err_num_ptr = KX509_STATUS_CLNT_TMP);
-	goto cleanup;
+        goto cleanup;
     }
 
     if (udp_nb_recv(socket, &pkt_recvd) == -1) {
@@ -708,6 +697,7 @@ clean_cert(RSA *rsa, X509 *certp)
  *=========================================================================*
  */
 int getcert(RSA	        **rsa,
+            int         *keybits,
             X509        **certp,
             char        *emsg,
             int	        elen,
@@ -717,9 +707,11 @@ int getcert(RSA	        **rsa,
             char        *ext_hostlist) 
 {
     krb5_error_code	k5_result;
-    krb5_context	k5_context;
+    krb5_context	k5_context = NULL;
     char		**dns_hostlist = NULL;
     char		**kca_hostlist;
+    char                **hostarray = NULL;
+    char                *hostlist = NULL;
     char		ca_hostname_to_try[256];
     char		*base_realm = NULL;
     char		*env_host_list = NULL;
@@ -740,7 +732,7 @@ int getcert(RSA	        **rsa,
  
     err = WSAStartup( wVersionRequested, &wsaData );
     if ( err != 0 )
-	return FALSE;
+	return err;
 
     /* Confirm that the WinSock DLL supports 2.2.*/
     /* Note that if the DLL supports versions greater    */
@@ -753,7 +745,7 @@ int getcert(RSA	        **rsa,
 	/* Tell the user that we could not find a usable */
 	/* WinSock DLL.                                  */
 	WSACleanup( );
-	return FALSE;
+	return WSAVERNOTSUPPORTED;
     }
 
     *certp = NULL;
@@ -828,7 +820,7 @@ int getcert(RSA	        **rsa,
     if (ext_hostlist != NULL && ext_hostlist[0] == '\0')
         ext_hostlist = NULL;
 
-#if 0
+#if USE_KCA_HOST_LIST_ENV
     if (ext_hostlist == NULL) {
 #if defined(WIN32) && _MSC_VER >= 1400
         _dupenv_s(&env_host_list, NULL, "KCA_HOST_LIST");
@@ -841,8 +833,6 @@ int getcert(RSA	        **rsa,
     if (env_host_list != NULL || ext_hostlist != NULL) {
         char *host;
         int hostcount = 0;
-        char *hostlist = NULL;
-        char **hostarray = NULL;
         size_t len = 0;
 
         /* Make a copy of the environment string, if needed */
@@ -854,7 +844,7 @@ int getcert(RSA	        **rsa,
                 goto Failed;
             }
 
-#if defined(WIN32) && _MSC_VER >= 1400
+#if defined(_WIN32) && _MSC_VER >= 1400
             hostlist = env_host_list;
 #else
             if (len) {
@@ -901,13 +891,6 @@ int getcert(RSA	        **rsa,
             goto Failed;
         }
 
-#if !defined(WIN32) || _MSC_VER < 1400
-        if (ext_hostlist == NULL) {
-            free(hostlist);
-            hostlist = NULL;
-        }
-#endif
-
         if (hostcount <= 0) {
             rc = KX509_STATUS_CLNT_IGN;
             arg->emsg = "Empty KCA_HOST_LIST environment variable or tokenize error";
@@ -926,10 +909,9 @@ int getcert(RSA	        **rsa,
         }
     }
 
-    if (kca_hostlist[0] == NULL) {
+    if (kca_hostlist[0]) {
         rc = KX509_STATUS_CLNT_IGN;
         arg->emsg = "Error!  Unable to determine KCA hostname(s)!";
-	goto Failed;
     }
 
     /* ITERATE THROUGH LIST OF KCA HOSTNAMES 
@@ -938,44 +920,79 @@ int getcert(RSA	        **rsa,
     for (m=0; m < 3;) {
 	for (n=0; kca_hostlist[n]; n++, m++) {
 	    int e;
+            int retry_same_host = FALSE;
+            *keybits = DEFBITS;
 
 	    log_printf("try_ca trying '%s' n=%d m=%d\n", kca_hostlist[n], n, m);
 	    StringCbCopyA(ca_hostname_to_try,
 			   sizeof(ca_hostname_to_try),
 			   kca_hostlist[n]);
 
-	    /* Exit the loop as soon as we get a good response */
-	    if (!(rc = try_ca(k5_context, socket, ca_hostname_to_try,
-			       realm, rsa, certp, verify_recvd_packet,
-			       (void*)arg, arg->sess_key, &arg->sess_len,
-			       tkt_cache_name,
-			       &arg->emsg, &e))) 
-	    {
+            do {
+                
+                /* Exit the loop as soon as we get a good response */
+                if (!(rc = try_ca(k5_context, socket, ca_hostname_to_try,
+                                  realm, rsa, certp, *keybits, verify_recvd_packet,
+                                  (void*)arg, arg->sess_key, &arg->sess_len,
+                                  tkt_cache_name,
+                                  &arg->emsg, &e))) 
+                {
+                    if (arg->response->status != KX509_STATUS_SRVR_KEY) {
 			m = 3;
-			break;
-	    } else {
-		log_printf("try_ca to '%s' returned rc %d, ecode %d, emsg '%s'\n",
-			    ca_hostname_to_try, rc, e, arg->emsg);
-	    }
+			goto done;
+                    }
+                } else {
+                    log_printf("try_ca to '%s' returned rc %d, ecode %d, emsg '%s'\n",
+                               ca_hostname_to_try, rc, e, arg->emsg);
+                }
+
+                if ((rc == KX509_STATUS_SRVR_KEY ||
+                     (rc == 0 && arg->response->status == KX509_STATUS_SRVR_KEY)) &&
+                     (*keybits) * 2 <= MAXBITS)
+                {
+                    log_printf("try_ca Server returned SRVR_KEY.  Retrying with larger key.\n");
+                    retry_same_host = TRUE;
+                    (*keybits) *= 2;
+                    if (*rsa) {
+                        /* force a new key */
+                        RSA_free(*rsa);
+                        *rsa = NULL;
+                    }
+                } else {
+                    retry_same_host = FALSE;
+                }
+            } while(retry_same_host);
 	}
     }
+  done:
 
-  Failed:
     if (arg->emsg) {
         log_printf("%s\n", arg->emsg);
     }
 
+  Failed:
+    if (k5_context)
+        krb5_free_context(k5_context);
+
     if (socket != INVALID_SOCKET)
 	closesocket(socket);
+
+    if (hostarray)
+        free(hostarray);
+
 
     if (dns_hostlist != NULL) {
 	Free(dns_hostlist);
     }
 
-#if defined(WIN32) && _MSC_VER >= 1400
-    if (env_host_list != NULL) {
-            free(env_host_list);
-    }
+#if !defined(_WIN32)
+#if _MSC_VER < 1400
+    if (hostlist)
+        free(hostlist);
+#else
+    if (env_host_list != NULL)
+        free(env_host_list);
+#endif
 #endif
 
     if (rc) {
@@ -1079,7 +1096,7 @@ void print_request(KX509_REQUEST *server_request)
 int bin_dump(char *cp, int s)
 {
     char *buffer;
-    int c;
+    char c;
     int w;
     int i;
     long o;
