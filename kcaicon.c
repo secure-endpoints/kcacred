@@ -27,6 +27,7 @@
 #include "credprov.h"
 #include <tchar.h>
 #include <shellapi.h>
+#include <htmlhelp.h>
 #include <strsafe.h>
 #include <assert.h>
 
@@ -36,6 +37,57 @@ static volatile BOOL notification_icon_added = FALSE;
 
 #define TOKEN_ICON_ID 1
 #define TOKEN_MESSAGE_ID WM_USER
+
+static khm_int32
+get_default_notifier_action(void)
+{
+    khm_int32 cmd = KHUI_ACTION_OPEN_APP;
+
+    khc_read_int32(NULL, L"CredWindow\\NotificationAction", &cmd);
+
+    return cmd;
+}
+
+static void
+prepare_context_menu(HMENU hmenu)
+{
+    khm_int32 cmd;
+    wchar_t caption[128];
+
+    cmd = get_default_notifier_action();
+
+    if (cmd == KHUI_ACTION_NEW_CRED)
+        LoadString(hResModule, IDS_ACT_NEW, caption, ARRAYLENGTH(caption));
+    else
+        LoadString(hResModule, IDS_ACT_OPEN, caption, ARRAYLENGTH(caption));
+
+    ModifyMenu(hmenu, ID_DEFAULT, MF_STRING|MF_BYCOMMAND, ID_DEFAULT, caption);
+    SetMenuDefaultItem(hmenu, ID_DEFAULT, FALSE);
+}
+
+static void
+handle_context_menu(void)
+{
+    POINT pt;
+    HMENU hMenu;
+    HMENU hMenuBar;
+
+    GetCursorPos(&pt);
+
+    hMenuBar = LoadMenu(hResModule, MAKEINTRESOURCE(IDR_CTXMENU));
+    hMenu = GetSubMenu(hMenuBar, 0);
+
+    if (hMenu) {
+        prepare_context_menu(hMenu);
+        TrackPopupMenu(hMenu, TPM_NONOTIFY, pt.x, pt.y, 0, notifier_window, NULL);
+    }
+
+    {
+        NOTIFYICONDATA idata;
+        ZeroMemory(&idata, sizeof(idata));
+        Shell_NotifyIcon(NIM_SETFOCUS, &idata);
+    }
+}
 
 static LRESULT CALLBACK
 notifier_wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -59,10 +111,40 @@ notifier_wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             return 0;
 
+        case WM_CONTEXTMENU:
+            handle_context_menu();
+            return TRUE;
+
         default:
             return 0;
         }
     }
+    else if (uMsg == WM_COMMAND) {
+        switch (LOWORD(wParam)) {
+        case ID_DEFAULT:
+            {
+                khm_int32 cmd;
+
+                cmd = get_default_notifier_action();
+
+                khui_action_trigger(cmd, NULL);
+            }
+            return TRUE;
+
+        case ID_SHOWHELP:
+            {
+                wchar_t helploc[MAX_PATH + MAX_PATH];
+
+                get_help_file(helploc, sizeof(helploc));
+
+                StringCbCat(helploc, sizeof(helploc), L"::index.html");
+
+                HtmlHelp(notifier_window, helploc, HH_DISPLAY_TOPIC, 0);
+            }
+            return TRUE;
+        }
+    }
+
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 

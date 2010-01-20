@@ -25,6 +25,7 @@
 #define IDS_CFG_ID_SHORT_DESC           119
 #define IDI_CRED_NONE                   119
 #define IDS_CFG_ID_LONG_DESC            120
+#define IDR_CTXMENU                     120
 #define IDS_ATTR_REALM_SHORT_DESC       121
 #define IDS_ATTR_REALM_LONG_DESC        122
 #define IDS_ATTR_SUBJECT_SHORT_DESC     123
@@ -57,6 +58,8 @@
 #define IDS_NC_CANTRENAME               148
 #define IDS_CRED_TT_NONE                149
 #define IDS_CRED_TT_GOOD                150
+#define IDS_ACT_NEW                     151
+#define IDS_ACT_OPEN                    152
 #define IDC_NC_AUTOHOST                 1036
 #define IDC_NC_MANHOST                  1037
 #define IDC_NC_REALMHOST                1038
@@ -75,14 +78,18 @@
 #define IDC_PP_NOTBEFORE                1054
 #define IDC_PP_NOTAFTER                 1055
 #define IDC_NC_ENABLE                   1073
+#define ID_DUMMYROOT_OPENNETWORKIDENTITYMANAGER 40001
+#define ID_DUMMYROOT_HELPFORKCAPROVIDER 40002
+#define ID_DEFAULT                      40003
+#define ID_SHOWHELP                     40004
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
-#define _APS_NEXT_RESOURCE_VALUE        120
-#define _APS_NEXT_COMMAND_VALUE         40001
+#define _APS_NEXT_RESOURCE_VALUE        121
+#define _APS_NEXT_COMMAND_VALUE         40005
 #define _APS_NEXT_CONTROL_VALUE         1045
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

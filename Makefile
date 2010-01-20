@@ -194,6 +194,8 @@ RC2RES=$(RC) $(RFLAGS) $(rincflags) /fo "$@" $**
 
 MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
 
+#"
+
 {}.c{$(OBJ)}.obj:
 	$(C2OBJ)
 

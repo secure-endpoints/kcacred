@@ -205,6 +205,21 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Menu
+//
+
+IDR_CTXMENU MENU 
+BEGIN
+    POPUP "Dummy root"
+    BEGIN
+        MENUITEM "Open Network Identity Manager", ID_DEFAULT
+        MENUITEM "Help for KCA Provider",       ID_SHOWHELP
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
@@ -264,6 +279,8 @@ BEGIN
     IDS_NC_CANTRENAME       "The certificate can't be renamed.  A certificate for the new realm (%s) already exists."
     IDS_CRED_TT_NONE        "No KCA certificates found"
     IDS_CRED_TT_GOOD        "KCA certificates for "
+    IDS_ACT_NEW             "Obtain new credentials ..."
+    IDS_ACT_OPEN            "Open Network Identity Manager"
 END
 
 #endif    // English (U.S.) resources
