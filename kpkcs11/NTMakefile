@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2008 Secure Endpoints Inc.
+# Copyright (c) 2006-2010 Secure Endpoints Inc.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -52,6 +52,7 @@ VERPATCH=2
 # Leave these as-is
 VERLIST=$(VERMAJOR).$(VERMINOR).$(VERAUX).$(VERPATCH)
 VERLISTC=$(VERMAJOR),$(VERMINOR),$(VERAUX),$(VERPATCH)
+VERLISTD=$(VERMAJOR)-$(VERMINOR)-$(VERAUX)-$(VERPATCH)
 
 # Various checks
 
@@ -87,17 +88,17 @@ CPU = AMD64
 !endif
 
 !if "$(CPU)" == "AMD64"
-!if exist($(OPENSSLDIR)\out64dll)
-OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
-!else
+!if exist($(OPENSSLDIR)\out64)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out64
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
 !endif
 !endif
 !if "$(CPU)" == "i386"
-!if exist($(OPENSSLDIR)\out32dll)
-OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
-!else
+!if exist($(OPENSSLDIR)\out32)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
 !endif
 !endif
 
@@ -119,8 +120,8 @@ OBJ=$(BUILDROOT)\obj\$(CPU)_$(BUILDTYPE)
 
 CD=cd
 RM=del /q
-MKDIR=mkdir
-RMDIR=rmdir
+MKDIR=md
+RMDIR=rd
 ECHO=echo
 CP=copy /y
 LINK=link
@@ -212,6 +213,26 @@ if exist "$@.manifest" $(RM) "$@.manifest"
 
 # End of manifest handling
 
+!IF "$(SIGNTOOL)" == ""
+SIGNTOOL=signtool.exe
+!ENDIF
+
+!IF DEFINED(CODESIGN_DESC) && DEFINED(CODESIGN_URL) && DEFINED(CODESIGN_TIMESTAMP)
+CODESIGN_USERLAND= "$(SIGNTOOL)" sign /a /d "$(CODESIGN_DESC)" /du $(CODESIGN_URL) /t $(CODESIGN_TIMESTAMP) /v $@
+!ELSE
+CODESIGN_USERLAND=
+!ENDIF
+
+!IF DEFINED(SYMSTORE_EXE) && DEFINED(SYMSTORE_ROOT)
+!IF "$(SYMSTORE_COMMENT)" != ""
+SYMSTORE_COMMENT = |$(SYMSTORE_COMMENT)
+!ENDIF
+SYMSTORE_IMPORT= \
+$(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "KCA PKCS#11 Module" /v "$(VERLISTD)" /c "$(@F)$(SYMSTORE_COMMENT)" /f $*.*
+!ELSE
+SYMSTORE_IMPORT=
+!ENDIF
+
 # Now for the actual build stuff
 
 DLL=$(DEST)\$(DLLBASENAME).dll
@@ -271,6 +292,7 @@ $(DLL): $(OBJFILES) $(DLLRESFILE)
 	$(DLLGUILINK) $(LIBFILES)
 #	$(_VC_MANIFEST_EMBED_DLL)
 #	$(_VC_MANIFEST_CLEAN)
+        $(CODESIGN_USERLAND)
 
 clean::
 	-$(RM) $(DLL)

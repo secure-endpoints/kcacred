@@ -148,6 +148,8 @@ notifier_wnd_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
+#pragma warning(push)
+#pragma warning(disable: 4204)
 static void
 initialize_if_necessary(void)
 {
@@ -205,6 +207,7 @@ initialize_if_necessary(void)
         assert(notification_icon_added);
     }
 }
+#pragma warning(pop)
 
 void
 kca_remove_icon(void)

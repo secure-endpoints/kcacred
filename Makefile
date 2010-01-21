@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2008 Secure Endpoints Inc.
+# Copyright (c) 2006-2010 Secure Endpoints Inc.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -56,7 +56,7 @@ DLLBASENAME=kcacred
 
 VERMAJOR=2
 VERMINOR=3
-VERAUX  =1
+VERAUX  =0
 VERPATCH=0
 
 # Target NetIDMgr version (string) only for display purposes
@@ -65,6 +65,7 @@ NIDMVERSTR=1.1
 # Leave these as-is
 VERLIST=$(VERMAJOR).$(VERMINOR).$(VERAUX).$(VERPATCH)
 VERLISTC=$(VERMAJOR),$(VERMINOR),$(VERAUX),$(VERPATCH)
+VERLISTD=$(VERMAJOR)-$(VERMINOR)-$(VERAUX)-$(VERPATCH)
 
 # Various checks
 
@@ -124,23 +125,43 @@ NIDMLIBDIR=$(NIDMSDKDIR)
 !endif
 
 !if "$(CPU)" == "AMD64"
-!if exist($(OPENSSLDIR)\out64dll)
-OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
-!else
+!if exist($(OPENSSLDIR)\out64)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out64
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
 !endif
 !endif
 !if "$(CPU)" == "i386"
-!if exist($(OPENSSLDIR)\out32dll)
-OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
-!else
+!if exist($(OPENSSLDIR)\out32)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32
+!else
+OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
 !endif
 !endif
 
 !if !defined(OPENSSLLIBDIR)
 !error 'OPENSSLLIBDIR' cannot be determined.
 !endif
+
+!IF "$(SIGNTOOL)" == ""
+SIGNTOOL=signtool.exe
+!ENDIF
+
+!IF DEFINED(CODESIGN_DESC) && DEFINED(CODESIGN_URL) && DEFINED(CODESIGN_TIMESTAMP)
+CODESIGN_USERLAND= "$(SIGNTOOL)" sign /a /d "$(CODESIGN_DESC)" /du $(CODESIGN_URL) /t $(CODESIGN_TIMESTAMP) /v $@
+!ELSE
+CODESIGN_USERLAND=
+!ENDIF
+
+!IF DEFINED(SYMSTORE_EXE) && DEFINED(SYMSTORE_ROOT)
+!IF "$(SYMSTORE_COMMENT)" != ""
+SYMSTORE_COMMENT = |$(SYMSTORE_COMMENT)
+!ENDIF
+SYMSTORE_IMPORT= \
+$(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "KCA Provider for Network Identity Manager" /v "$(VERLISTD)" /c "$(@F)$(SYMSTORE_COMMENT)" /f $*.*
+!ELSE
+SYMSTORE_IMPORT=
+!ENDIF
 
 # Win32.mak
 
@@ -385,6 +406,7 @@ $(DLL): $(OBJFILES) $(DLLRESFILE)
 	$(DLLGUILINK) $(LIBFILES)
 	$(_VC_MANIFEST_EMBED_DLL)
 	$(_VC_MANIFEST_CLEAN)
+        $(CODESIGN_USERLAND)
 
 clean::
 	-$(RM) $(DLL)
@@ -405,6 +427,7 @@ $(LANGDLL): $(OBJ)\langres_$(LANG).res $(OBJ)\version_$(LANG).res
 	$(DLLRESLINK)
 	$(_VC_MANIFEST_EMBED_DLL)
 	$(_VC_MANIFEST_CLEAN)
+        $(CODESIGN_USERLAND)
 
 clean::
 	-$(RM) $(LANGDLL)
@@ -438,6 +461,7 @@ msi: $(MSIFILE)
 
 $(MSIFILE): $(OBJ)\kcaplugin.wixobj
 	light -v0 -out $@ $**
+        $(CODESIGN_USERLAND)
 
 $(OBJ)\kcaplugin.wixobj: installer\kcaplugin.wxs $(DLL) $(HELPFILE)
 	candle -v0 \
@@ -458,6 +482,8 @@ clean::
 TESTEXEOBJS=$(OBJ)\testmain.obj
 
 TESTSDKLIBS= \
+        gdi32.lib       \
+        user32.lib      \
 	$(KFWLIBS) 	\
 	"$(OPENSSLLIBDIR)\libeay32.lib"	\
 	$(DEST)\kcacred.lib
