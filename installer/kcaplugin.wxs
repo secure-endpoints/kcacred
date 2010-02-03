@@ -78,10 +78,6 @@
 
     <FeatureRef Id="Complete" />
 
-    <Upgrade Id="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
-      <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.KCAPluginVersion)" MigrateFeatures="yes" Property="KCAPLUGIN_UPGRADE" />
-    </Upgrade>
-
     <!-- Product search -->
     <Property Id="KFWVERSION">
       <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" />

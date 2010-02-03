@@ -163,7 +163,7 @@
       <?endif ?>
     </DirectoryRef>
 
-    <Feature Id="$(var.MainFeature)" Title="NetIDMgr KCA Provider" Level="1">
+    <Feature Id="$(var.MainFeature)" Title="NetIDMgr KCA Provider" Level="1" ConfigurableDirectory="KCAPLUGINDIR">
       <ComponentRef Id="_kcacreds_plugin" />
       <ComponentRef Id="_kcacreds_en_us" />
       <ComponentRef Id="_kcaplugin_chm" />
@@ -189,5 +189,10 @@
         <?endif ?>
       </Feature>
     </Feature>
+
+    <Upgrade Id="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
+      <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.KCAPluginVersion)" MigrateFeatures="yes" Property="KCAPLUGIN_UPGRADE" />
+    </Upgrade>
+
   </Fragment>
 </Wix>

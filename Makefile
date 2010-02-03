@@ -492,7 +492,7 @@ $(OBJ)\kcaplugin-wl.wixobj: installer\kcaplugin-core.wxs $(DLL) $(HELPFILE)
 	-dNetIDMgrVersion="$(NIDMVERSTR)" \
 	-dBinDir="$(DEST)" \
 	-dKPKCS11BinDir="$(KPKCS11DEST)" \
-	-dMainFeature=KCAPlugin \
+	-dMainFeature=Feature.KCACred \
 	-out $@ installer\kcaplugin-core.wxs
 
 clean::
