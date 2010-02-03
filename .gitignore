@@ -1,0 +1,6 @@
+dest/
+obj/
+*~
+kcaplugin.chm
+*.pdb
+*.idb
