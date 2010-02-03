@@ -28,7 +28,7 @@ for %%i in (candle.exe) do (
 )
 goto headout1
 :nowix
-set PATH=%PATH%;c:\work\wix2
+set PATH=%PATH%;c:\work\wix3
 :headout1
 for %%i in (gtags.exe) do (
         if "%%~$PATH:i"=="" goto nogtags

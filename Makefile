@@ -459,17 +459,25 @@ MSIFILE=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)-$(CPU)$(
 
 msi: $(MSIFILE)
 
-$(MSIFILE): $(OBJ)\kcaplugin.wixobj
-	light -v0 -out $@ $**
+$(MSIFILE): $(OBJ)\kcaplugin.wixobj $(OBJ)\kcaplugin-core.wixobj
+	light -nologo -out $@ $**
         $(CODESIGN_USERLAND)
 
 $(OBJ)\kcaplugin.wixobj: installer\kcaplugin.wxs $(DLL) $(HELPFILE)
-	candle -v0 \
+	candle -nologo \
 	-dKCAPluginVersion="$(VERLIST)" \
 	-dNetIDMgrVersion="$(NIDMVERSTR)" \
 	-dBinDir="$(DEST)" \
 	-dKPKCS11BinDir="$(KPKCS11DEST)" \
 	-out $@ installer\kcaplugin.wxs
+
+$(OBJ)\kcaplugin-core.wixobj: installer\kcaplugin-core.wxs $(DLL) $(HELPFILE)
+	candle -nolog \
+	-dKCAPluginVersion="$(VERLIST)" \
+	-dNetIDMgrVersion="$(NIDMVERSTR)" \
+	-dBinDir="$(DEST)" \
+	-dKPKCS11BinDir="$(KPKCS11DEST)" \
+	-out $@ installer\kcaplugin-core.wxs
 
 clean::
 	-$(RM) $(MSIFILE)

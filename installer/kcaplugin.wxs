@@ -1,59 +1,39 @@
-<?xml version="1.0"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2003/01/wi">
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-<?ifndef KCAPluginVersion?>
-    <?error KCAPluginVersion not defined. ?>
-<?endif?>
-<?ifndef NetIDMgrVersion?>
-    <?error NetIDMgrVersion not defined. ?>
-<?endif?>
-<?ifndef BinDir?>
-    <?error BinDir not defined. ?>
-<?endif?>
-<?ifndef KPKCS11BinDir?>
-    <?error KPKCS11BinDir not defined ?>
-<?endif?>
+  <?ifndef KCAPluginVersion?>
+  <?error KCAPluginVersion not defined. ?>
+  <?endif ?>
+  <?ifndef NetIDMgrVersion?>
+  <?error NetIDMgrVersion not defined. ?>
+  <?endif ?>
+  <?ifndef BinDir?>
+  <?error BinDir not defined. ?>
+  <?endif ?>
+  <?ifndef KPKCS11BinDir?>
+  <?error KPKCS11BinDir not defined ?>
+  <?endif ?>
 
-<?if $(env.CPU) = "i386"?>
-    <?define Platform="Intel"?>
-    <?define Win64="no"?>
-<?elseif $(env.CPU) = "AMD64"?>
-    <?define Platform="x64"?>
-    <?define Win64="yes"?>
-<?else?>
-    <?error Unknown build type?>
-<?endif?>
+  <?if $(env.CPU) = "i386"?>
+  <?define Platform="x86"?>
+  <?define Win64="no"?>
+  <?elseif $(env.CPU) = "AMD64"?>
+  <?define Platform="x64"?>
+  <?define Win64="yes"?>
+  <?else ?>
+  <?error Unknown build type?>
+  <?endif ?>
 
 
-<!-- Platform specific macros -->
-<?if $(var.Platform) = "x64" ?>
-    <?define PIProgramFilesFolder="ProgramFiles64Folder"?>
+  <!-- Platform specific macros -->
+  <?if $(var.Platform) = "x64" ?>
+  <?define PIProgramFilesFolder="ProgramFiles64Folder"?>
+  <?elseif $(var.Platform) = "x86" ?>
+  <?define PIProgramFilesFolder="ProgramFilesFolder"?>
+  <?endif ?>
 
-    <?define _kcacreds_en_us_guid="1D2B8050-B025-4345-92DC-986A59D512DD" ?>
-    <?define _kcacreds_plugin_guid="76DAB3E0-60FA-4B0D-96C7-8F09CF56114B" ?>
-    <?define _kcacreds_debugsyms_guid="D6E516C3-57DE-401D-BD3C-9EA20D837B2F" ?>
-    <?define _kpkcs11_plugin_guid="CC7C7C3D-19D3-4E15-A0D6-BE049D6E4280" ?>
-<?elseif $(var.Platform) = "Intel" ?>
-    <?define PIProgramFilesFolder="ProgramFilesFolder"?>
-
-    <?define _kcacreds_en_us_guid="CCE39889-2BF1-4C61-A93E-F5A442B079BC" ?>
-    <?define _kcacreds_plugin_guid="732F5BC6-721D-4E7C-9638-054DC0582313" ?>
-    <?define _kcacreds_debugsyms_guid="9E146EED-3F60-458E-B6AA-4E31BFE6E736" ?>
-    <?define _kpkcs11_plugin_guid="D3AD1224-09FA-4D50-B60E-F094F39AF498" ?>
-<?endif?>
-
-  <Product
-        Id="????????-????-????-????-????????????" 
-        Name="KCA Provider $(var.KCAPluginVersion) for NetIDMgr $(var.NetIDMgrVersion)"
-        Language="1033"
-        Version="$(var.KCAPluginVersion)"
-        Manufacturer="Secure Endpoints Inc."
-        UpgradeCode="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
-    <Package Id="????????-????-????-????-????????????"
-        Description="Provider of KCA credential management to Network Identity Manager" 
-        InstallerVersion="200"
-        Platforms="$(var.Platform)"
-        Compressed="yes" />
+  <Product Id="*" Name="KCA Provider $(var.KCAPluginVersion) for NetIDMgr $(var.NetIDMgrVersion)" Language="1033" Version="$(var.KCAPluginVersion)" Manufacturer="Secure Endpoints Inc." UpgradeCode="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
+    <Package Description="Provider of KCA credential management to Network Identity Manager" InstallerVersion="200" Platform="$(var.Platform)" Compressed="yes" />
 
     <Media Id="1" Cabinet="Product.cab" EmbedCab="yes" CompressionLevel="high" />
 
@@ -89,144 +69,14 @@
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.PIProgramFilesFolder)">
-        <Directory Id="dirSecEndpoints" Name="secendpt" LongName="Secure Endpoints">
-          <Directory Id="KCAPLUGINDIR" Name="kcaplgin" LongName="KCA Provider" src="$(var.BinDir)">
-
-              <Component Id="_kcacreds_en_us" Win64="$(var.Win64)"
-                Guid="$(var._kcacreds_en_us_guid)" DiskId="1">
-                <File Id="file_kcacred_en_us_dll" Name="kcacenu.dll" LongName="kcacred_en_us.dll" KeyPath="yes"/>
-              </Component>
-
-              <Component Id="_kcacreds_plugin" Win64="$(var.Win64)"
-                Guid="$(var._kcacreds_plugin_guid)" DiskId="1">
-                <File Id="file_kcacred_dll" Name="kcacred.dll" LongName="kcacred.dll" KeyPath="yes"/>
-                <Registry Id="reg_mod_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Action="createKeyAndRemoveKeyOnUninstall" />
-                <Registry Id="reg_mod_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" />
-                <Registry Id="reg_mod_03" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="ImagePath" Type="string" Value="[#file_kcacred_dll]" />
-                <Registry Id="reg_mod_04" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="Description" Type="string" Value="KCA Credentials Provider Module" />
-                <Registry Id="reg_mod_05" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="Vendor" Type="string" Value="Secure Endpoints Inc." />
-                <Registry Id="reg_mod_06" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="PluginList" Type="string" Value="KCACred" />
-                <Registry Id="reg_plg_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Action="createKeyAndRemoveKeyOnUninstall" />
-                <Registry Id="reg_plg_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" />
-                <Registry Id="reg_plg_03" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Module" Type="string" Value="KCAMod" />
-                <Registry Id="reg_plg_04" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Description" Type="string" Value="AFS Credentials Provider" />
-                <Registry Id="reg_plg_05" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Dependencies" Type="string" Value="Krb5Cred" />
-                <Registry Id="reg_plg_06" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Type" Type="integer" Value="1" />
-              </Component>
-
-              <Component Id="_custom_realm_map" Win64="$(var.Win64)"
-                Guid="CC38D11A-C592-40FA-A740-D3C9075C2503">
-                <Condition>KCAREALMMAPFROM And KCAREALMMAPTO</Condition>
-                <Registry Id="reg_crm_0" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" KeyPath="yes"/>
-                <Registry Id="reg_crm_1" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Action="createKeyAndRemoveKeyOnUninstall" />
-                <Registry Id="reg_crm_2" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCAEnabled" Type="integer" Value="1" />
-                <Registry Id="reg_crm_3" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCAHostMethod" Type="integer" Value="2" />
-                <Registry Id="reg_crm_4" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCARealm" Type="string" Value="[KCAREALMMAPTO]" />
-              </Component>
-
-              <Component Id="_kcacreds_debugsym" Win64="$(var.Win64)"
-                Guid="$(var._kcacreds_debugsyms_guid)" DiskId="1">
-                <File Id="file_kcacred_pdb" Name="kcacred.pdb" LongName="kcacred.pdb" KeyPath="yes"/>
-              </Component>
-              <Component Id="_kcaplugin_chm"
-                Guid="59E851AA-AE0D-4683-BE91-2A3EBA65535F" DiskId="1">
-                <File Id="file_kcaplhlp_chm" Name="kcaplgin.chm" LongName="kcaplugin.chm" KeyPath="yes" />
-              </Component>
-
-              <Component Id="_kpkcs11_plugin" Win64="$(var.Win64)"
-                Guid="$(var._kpkcs11_plugin_guid)" DiskId="1">
-                <File Id="file_kpkcs11_dll" Name="kpkcs11.dll" LongName="kpkcs11.dll" KeyPath="yes"
-                  Source="$(var.KPKCS11BinDir)\kpkcs11.dll" />
-              </Component>
-
-<?if $(var.Platform) = "Intel" ?>
-<?ifndef NOMODUTIL?>
-            <Directory Id="dirModutil" Name="modutil">
-              <Component Id="_modutil_exe"
-                Guid="4D89424D-A024-42EB-8B05-995F0FB930F2" DiskId="1">
-                <File Id="file_modutil_exe" Name="modutil.exe" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\modutil.exe" />
-              </Component>
-
-              <Component Id="_smime3_dll"
-                Guid="9D86C0CA-3714-4410-823D-581707631486" DiskId="1">
-                <File Id="file_smime3_dll" Name="smime3.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\smime3.dll" />
-              </Component>
-
-              <Component Id="_nss3_dll"
-                Guid="E1E68C5A-9004-48D0-A3D4-32C4CD7E5DA1" DiskId="1">
-                <File Id="file_nss3_dll" Name="nss3.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\nss3.dll" />
-              </Component>
-
-              <Component Id="_softokn3_dll"
-                Guid="7616DC04-222F-460F-B1F6-C9B8DF6E18ED" DiskId="1">
-                <File Id="file_softokn3_dll" Name="softokn3.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\softokn3.dll" />
-              </Component>
-
-              <Component Id="_libplc4_dll"
-                Guid="F6B4253E-5060-4614-95D9-4CA691CF961F" DiskId="1">
-                <File Id="file_libplc4_dll" Name="libplc4.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\libplc4.dll" />
-              </Component>
-
-              <Component Id="_libplds4_dll"
-                Guid="2BA830F3-3AC6-4B7D-82E1-C4AA800EBBB6" DiskId="1">
-                <File Id="file_libplds4_dll" Name="libplds4.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\libplds4.dll" />
-              </Component>
-
-              <Component Id="_libnspr4_dll"
-                Guid="250CD190-6229-43CD-8457-E45853018B75" DiskId="1">
-                <File Id="file_libnspr4_dll" Name="libnspr4.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\libnspr4.dll" />
-              </Component>
-
-              <Component Id="_msvcrt_dll"
-                Guid="6BC0C577-D87B-4D79-87D6-99EE72DEAFEA" DiskId="1">
-                <File Id="file_msvcrt_dll" Name="msvcrt.dll" KeyPath="yes"
-                  Source="$(sys.SOURCEFILEDIR)\nss\msvcrt.dll" />
-              </Component>
-            </Directory>
-<?endif?>
-<?endif?>
+        <Directory Id="dirSecEndpoints" ShortName="secendpt" Name="Secure Endpoints">
+          <Directory Id="KCAPLUGINDIR" ShortName="kcaplgin" Name="KCA Provider" FileSource="$(var.BinDir)">
           </Directory>
         </Directory>
       </Directory>
     </Directory>
 
-    <Feature Id="Complete" Title="NetIDMgr KCA Provider" Level="1">
-      <ComponentRef Id="_kcacreds_plugin" />
-      <ComponentRef Id="_kcacreds_en_us" />
-      <ComponentRef Id="_kcaplugin_chm" />
-      <ComponentRef Id="_custom_realm_map" />
-      <Feature Id="DebugSyms" Title="Debug Symbols" Level="100">
-        <ComponentRef Id="_kcacreds_debugsym" />
-      </Feature>
-      <Feature Id="KPKCS11Plugin" Title="PKCS #11 Plugin for Security Certificates"
-        Description="Exposes the Windows certificate store for use by the Mozilla family of products."
-        Level="1">
-        <ComponentRef Id="_kpkcs11_plugin" />
-<?if $(var.Platform) = "Intel" ?>
-<?ifndef NOMODUTIL?>
-        <Feature Id="Modutil" Title="Mozilla Security Module Database Tool"
-          Description="Command-line utility for managing PKCS #1 modules for the Mozilla family of products.  Can be used to install the PKCS #11 Plugin for security certificates."
-          Level="60">
-          <ComponentRef Id="_modutil_exe" />
-          <ComponentRef Id="_smime3_dll" />
-          <ComponentRef Id="_softokn3_dll" />
-          <ComponentRef Id="_nss3_dll" />
-          <ComponentRef Id="_libplc4_dll" />
-          <ComponentRef Id="_libplds4_dll" />
-          <ComponentRef Id="_libnspr4_dll" />
-          <ComponentRef Id="_msvcrt_dll" />
-        </Feature>
-<?endif?>
-<?endif?>
-      </Feature>
-    </Feature>
+    <FeatureRef Id="Complete" />
 
     <Upgrade Id="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
       <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.KCAPluginVersion)" MigrateFeatures="yes" Property="KCAPLUGIN_UPGRADE" />
@@ -234,13 +84,13 @@
 
     <!-- Product search -->
     <Property Id="KFWVERSION">
-        <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" />
     </Property>
     <Property Id="KFWVERSIONMAJOR">
-        <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" />
     </Property>
     <Property Id="KFWVERSIONMINOR">
-        <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" />
+      <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" />
     </Property>
     <!-- Launch conditions -->
     <Condition Message="This product requires Windows 2000, Windows XP, Windows 2003 or newer operating system.">
@@ -249,16 +99,16 @@
     <Condition Message="This product requires Kerberos for Windows 3.1.0 or later to be installed">
         Installed Or (KFWVERSION And KFWVERSIONMAJOR And (KFWVERSIONMAJOR &gt; "#3" Or (KFWVERSIONMAJOR = "#3" And KFWVERSIONMINOR &gt;= "#1")))
     </Condition>
-    
+
     <!-- Custom actions -->
     <!-- nothing here yet -->
-    
+
     <!-- Sequences -->
     <InstallExecuteSequence>
       <RemoveExistingProducts After="InstallFinalize" />
     </InstallExecuteSequence>
     <InstallUISequence>
-    <!-- leave default -->
+      <!-- leave default -->
     </InstallUISequence>
 
     <Property Id="ALLUSERS" Value="1" />
@@ -266,7 +116,7 @@
     <Property Id="ARPURLINFOABOUT" Value="https://www.secure-endpoints.com" />
     <Property Id="ARPURLUPDATEINFO" Value="https://www.secure-endpoints.com" />
     <Property Id="ARPCOMMENTS" Value="Provides KCA certificate management functions to MIT Network Identity Manager" />
-    
+
     <!-- User interface -->
     <UI>
       <Dialog Id="AdminWelcomeDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
@@ -586,17 +436,15 @@
       </Dialog>
       <Dialog Id="CCPErrorDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes" KeepModeless="yes">
 
-        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]" Disabled="yes">
-        </Control>
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]" Disabled="yes" />
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Finish]">
-		  <Publish Event="EndDialog" Value="Exit">1</Publish>
+          <Publish Event="EndDialog" Value="Exit">1</Publish>
         </Control>
-        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Disabled="yes" Text="[ButtonText_Cancel]">
-        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Disabled="yes" Text="[ButtonText_Cancel]" />
 
-		<Control Id="ErrorText" Type="Text" X="20" Y="70" Width="280" Height="75">
-		  <Text>[ProductName] requires a newer version of iphlpapi.dll than the one that is currently installed on this computer.  This file is included in Microsoft Internet Explorer version 5.01 or later.  Please install this and re-run the [ProductName] installer.</Text>
-		</Control>
+        <Control Id="ErrorText" Type="Text" X="20" Y="70" Width="280" Height="75">
+          <Text>[ProductName] requires a newer version of iphlpapi.dll than the one that is currently installed on this computer.  This file is included in Microsoft Internet Explorer version 5.01 or later.  Please install this and re-run the [ProductName] installer.</Text>
+        </Control>
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="[BannerBitmap]" />
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
@@ -625,7 +473,7 @@
         </Control>
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="[BannerBitmap]" />
         <Control Id="AgreementText" Type="ScrollableText" X="20" Y="60" Width="330" Height="120" Sunken="yes" TabSkip="no">
-          <Text src=".\lang\en_us\license.rtf"/>
+          <Text SourceFile=".\lang\en_us\license.rtf" />
         </Control>
         <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
@@ -1030,8 +878,8 @@
         </Control>
       </Dialog>
       <RadioButtonGroup Property="IAgree">
-        <RadioButton Text="{\DlgFont8}I &amp;accept the terms in the License Agreement" X="5" Y="0" Width="250" Height="15" Value="Yes"></RadioButton>
-        <RadioButton Text="{\DlgFont8}I &amp;do not accept the terms in the License Agreement" X="5" Y="20" Width="250" Height="15" Value="No"></RadioButton>
+        <RadioButton Text="{\DlgFont8}I &amp;accept the terms in the License Agreement" X="5" Y="0" Width="250" Height="15" Value="Yes" />
+        <RadioButton Text="{\DlgFont8}I &amp;do not accept the terms in the License Agreement" X="5" Y="20" Width="250" Height="15" Value="No" />
       </RadioButtonGroup>
       <TextStyle Id="DlgFont8" FaceName="Tahoma" Size="8" />
       <TextStyle Id="DlgFontBold8" FaceName="Tahoma" Size="8" Bold="yes" />
@@ -1314,7 +1162,7 @@
       <Error Id="1933">The Windows Installer service cannot update one or more protected Windows files. {{SFP Error: [2].  List of protected files:\r\n[3]}}</Error>
       <Error Id="1934">User installations are disabled via policy on the machine.</Error>
       <Error Id="1935">An error occured during the installation of assembly component [2]. HRESULT: [3]. {{assembly interface: [4], function: [5], assembly name: [6]}}</Error>
-      
+
       <AdminUISequence>
         <Show Dialog="FatalError" OnExit="error" />
         <Show Dialog="UserExit" OnExit="cancel" />
@@ -1374,16 +1222,16 @@
     <Property Id="IAgree"><![CDATA[No]]></Property>
     <Property Id="BannerBitmap"><![CDATA[bannrbmp]]></Property>
     <Property Id="DialogBitmap"><![CDATA[dlgbmp]]></Property>
-    <Binary Id="bannrbmp" src="installer\Binary\bannrbmp.bmp" />
-    <Binary Id="completi" src="installer\Binary\completi.ico" />
-    <Binary Id="custicon" src="installer\Binary\custicon.ico" />
-    <Binary Id="dlgbmp" src="installer\Binary\dlgbmp.bmp" />
-    <Binary Id="exclamic" src="installer\Binary\exclamic.ico" />
-    <Binary Id="info" src="installer\Binary\info.bmp" />
-    <Binary Id="insticon" src="installer\Binary\insticon.ico" />
-    <Binary Id="New" src="installer\Binary\New.bmp" />
-    <Binary Id="removico" src="installer\Binary\removico.ico" />
-    <Binary Id="repairic" src="installer\Binary\repairic.ico" />
-    <Binary Id="Up" src="installer\Binary\up.bmp" />
+    <Binary Id="bannrbmp" SourceFile="installer\Binary\bannrbmp.bmp" />
+    <Binary Id="completi" SourceFile="installer\Binary\completi.ico" />
+    <Binary Id="custicon" SourceFile="installer\Binary\custicon.ico" />
+    <Binary Id="dlgbmp" SourceFile="installer\Binary\dlgbmp.bmp" />
+    <Binary Id="exclamic" SourceFile="installer\Binary\exclamic.ico" />
+    <Binary Id="info" SourceFile="installer\Binary\info.bmp" />
+    <Binary Id="insticon" SourceFile="installer\Binary\insticon.ico" />
+    <Binary Id="New" SourceFile="installer\Binary\New.bmp" />
+    <Binary Id="removico" SourceFile="installer\Binary\removico.ico" />
+    <Binary Id="repairic" SourceFile="installer\Binary\repairic.ico" />
+    <Binary Id="Up" SourceFile="installer\Binary\up.bmp" />
   </Product>
 </Wix>
