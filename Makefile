@@ -472,11 +472,27 @@ $(OBJ)\kcaplugin.wixobj: installer\kcaplugin.wxs $(DLL) $(HELPFILE)
 	-out $@ installer\kcaplugin.wxs
 
 $(OBJ)\kcaplugin-core.wixobj: installer\kcaplugin-core.wxs $(DLL) $(HELPFILE)
-	candle -nolog \
+	candle -nologo \
 	-dKCAPluginVersion="$(VERLIST)" \
 	-dNetIDMgrVersion="$(NIDMVERSTR)" \
 	-dBinDir="$(DEST)" \
 	-dKPKCS11BinDir="$(KPKCS11DEST)" \
+	-out $@ installer\kcaplugin-core.wxs
+
+WIXLIB=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)-$(CPU)$(VERDEBUG).wixlib
+
+wixlib: $(WIXLIB)
+
+$(WIXLIB): $(OBJ)\kcaplugin-wl.wixobj
+	lit -nologo -bf -out $@ $**
+
+$(OBJ)\kcaplugin-wl.wixobj: installer\kcaplugin-core.wxs $(DLL) $(HELPFILE)
+	candle -nologo \
+	-dKCAPluginVersion="$(VERLIST)" \
+	-dNetIDMgrVersion="$(NIDMVERSTR)" \
+	-dBinDir="$(DEST)" \
+	-dKPKCS11BinDir="$(KPKCS11DEST)" \
+	-dMainFeature=KCAPlugin \
 	-out $@ installer\kcaplugin-core.wxs
 
 clean::
