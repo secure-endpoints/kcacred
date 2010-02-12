@@ -1973,6 +1973,72 @@ handle_kmsg_cred_dialog_new_options(khm_ui_4 uparam,
     return KHM_ERROR_SUCCESS;
 }
 
+static void
+update_dn_to_realm_map(char * der, int cb_der, const char * realm)
+{
+    PCCERT_CONTEXT pCertContext = NULL;
+    khm_handle csp_realms = NULL;
+    khm_handle csp_realm = NULL;
+    wchar_t wrealm[256];
+
+    AnsiStrToUnicode(wrealm, sizeof(wrealm), realm);
+
+    pCertContext = CertCreateCertificateContext(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+                                                der, cb_der);
+    if (pCertContext == NULL)
+        return;
+
+    do {
+        wchar_t * dn = NULL;
+        wchar_t * dnlist = NULL;
+        khm_size cb;
+        DWORD cch;
+
+        if (KHM_FAILED(khc_open_space(csp_params, L"Realms", KHM_FLAG_CREATE, &csp_realms)) ||
+            KHM_FAILED(khc_open_space(csp_realms, wrealm, KHM_FLAG_CREATE, &csp_realm)))
+            break;
+
+        cch = CertNameToStr(X509_ASN_ENCODING, &pCertContext->pCertInfo->Issuer,
+                            CERT_X500_NAME_STR, NULL, 0);
+        if (cch <= 1)
+            break;
+
+        dn = calloc(sizeof(wchar_t), cch);
+
+        CertNameToStr(X509_ASN_ENCODING, &pCertContext->pCertInfo->Issuer,
+                      CERT_X500_NAME_STR, dn, cch);
+
+        if (khc_read_multi_string(csp_realm, L"IssuerDN", NULL, &cb) != KHM_ERROR_TOO_LONG) {
+            cb = (cch + 1) * sizeof(wchar_t);
+            dnlist = malloc(cb);
+            multi_string_init(dnlist, cb);
+        } else {
+            khm_size cbt;
+
+            cbt = (cb += cch * sizeof(wchar_t));
+            dnlist = malloc(cb);
+            khc_read_multi_string(csp_realm, L"IssuerDN", dnlist, &cbt);
+        }
+
+        if (multi_string_find(dnlist, dn, 0) == NULL) {
+            multi_string_append(dnlist, &cb, dn);
+            khc_write_multi_string(csp_realm, L"IssuerDN", dnlist);
+        }
+
+        free(dn);
+        free(dnlist);
+
+    } while (FALSE);
+
+    CertFreeCertificateContext(pCertContext);
+
+    if (csp_realm)
+        khc_close_space(csp_realm);
+
+    if (csp_realms)
+        khc_close_space(csp_realms);
+}
+
 /* Handler for KMSG_CRED_PROCESS */
 khm_int32
 handle_kmsg_cred_process(khui_new_creds * nc) {
@@ -2242,6 +2308,8 @@ handle_kmsg_cred_process(khui_new_creds * nc) {
 
         /* and the cert */
         store_cert((BYTE *) &der_buf[0], cb_der, container);
+
+        update_dn_to_realm_map(&der_buf[0], cb_der, realm);
 
     cert_err_exit:
 

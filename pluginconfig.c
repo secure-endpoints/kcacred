@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2007, 2010 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -47,6 +47,11 @@ plugin_schema[] = {
        hosts automatically (in which case 'KCAHosts' value is
        ignored). 1 means use the 'KCAHosts' value, and enables
        specifying host list manually. */
+
+    { L"IssuerDN", KC_STRING, (khm_ui_8) L"", NULL},
+    /* Distinguished name of the issuer.  This field is only expected
+       to be found in the Realms/<Realm>/ key and is used to associate
+       KCA certificates with known realms. */
 
     { L"Realms", KC_SPACE, 0, L"Per-realm configuration"},
 

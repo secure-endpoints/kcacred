@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2007, 2010 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -103,6 +103,81 @@ khm_get_realm_from_princ(wchar_t * princ) {
 }
 
 
+typedef struct dn_to_realm {
+    wchar_t         *realm;
+    wchar_t         *dn;
+
+    struct dn_to_realm * next;
+} dn_to_realm;
+
+static void make_dn_to_realm_map(dn_to_realm ** ppmap)
+{
+    khm_handle csp_realms = NULL;
+    khm_handle csp_realm = NULL;
+
+    *ppmap = NULL;
+
+    if (KHM_FAILED(khc_open_space(csp_params, L"Realms", 0, &csp_realms)))
+        return;
+
+    while (KHM_SUCCEEDED(khc_enum_subspaces(csp_realms, csp_realm, &csp_realm))) {
+        wchar_t realm[256];
+        khm_size cb;
+
+        if (!khc_value_exists(csp_realm, L"IssuerDN"))
+            continue;
+
+        cb = sizeof(realm);
+        if (KHM_FAILED(khc_get_config_space_name(csp_realm, realm, &cb)))
+            continue;
+
+        cb = 0;
+        if (khc_read_multi_string(csp_realm, L"IssuerDN", NULL, &cb) == KHM_ERROR_TOO_LONG) {
+            wchar_t * dn;
+            wchar_t *dnlist = NULL;
+
+            dnlist = malloc(cb);
+
+            if (KHM_FAILED(khc_read_multi_string(csp_realm, L"IssuerDN", dnlist, &cb))) {
+                free (dnlist);
+                continue;
+            }
+
+            for (dn = dnlist; dn && *dn; dn = multi_string_next(dn)) {
+                dn_to_realm *m = NULL;
+
+                m = calloc(sizeof(*m), 1);
+                m->dn = _wcsdup(dn);
+                m->realm = _wcsdup(realm);
+                m->next = *ppmap;
+                *ppmap = m;
+            }
+
+            free (dnlist);
+        }
+    }
+
+    if (csp_realm)
+        khc_close_space(csp_realm);
+
+    if (csp_realms)
+        khc_close_space(csp_realms);
+}
+
+static void free_dn_to_realm_map(dn_to_realm ** ppmap)
+{
+    while (*ppmap) {
+        dn_to_realm * m;
+
+        m = *ppmap;
+        *ppmap = (*ppmap)->next;
+
+        free(m->dn);
+        free(m->realm);
+        free(m);
+    }
+}
+
 void kca_list_creds(void) {
     HCERTSTORE     hStoreHandle;
     PCCERT_CONTEXT pCertContext = NULL;
@@ -123,11 +198,14 @@ void kca_list_creds(void) {
     wchar_t *      realm;
     khm_handle     cred;
     khm_handle     ident;
+    dn_to_realm    *dn_to_realm_map = NULL;
 
     if (!(hStoreHandle = CertOpenSystemStore(0, WIN32MYCERT_STORE))) {
         HandleError("Unable to access the system certificate store");
         return;
     }
+
+    make_dn_to_realm_map(&dn_to_realm_map);
 
     LoadString(hResModule, IDS_LOC_MYSTORE,
                certstore_name, ARRAYLENGTH(certstore_name));
@@ -160,7 +238,7 @@ void kca_list_creds(void) {
         log_printf("     E : %S", widname);
         log_printf("     I : %S", wissuer);
 
-        if (pCertInfo = pCertContext->pCertInfo) {
+        if ((pCertInfo = pCertContext->pCertInfo) != NULL) {
 	    BOOL bGotRealm = FALSE, bGotIdentity = FALSE;
 
 	    ident = NULL;
@@ -259,16 +337,61 @@ void kca_list_creds(void) {
 		}
 	    }
 
-	    /* If we don't have a realm, then skip the cert */
+            if (!bGotRealm && dn_to_realm_map) {
+                wchar_t * dn = NULL;
+                DWORD cch;
+
+                do {
+                    dn_to_realm * m;
+
+                    cch = CertNameToStr(X509_ASN_ENCODING, &pCertContext->pCertInfo->Issuer,
+                                        CERT_X500_NAME_STR, NULL, 0);
+                    if (cch <= 1)
+                        break;
+
+                    dn = calloc(sizeof(wchar_t), cch);
+
+                    CertNameToStr(X509_ASN_ENCODING, &pCertContext->pCertInfo->Issuer,
+                                  CERT_X500_NAME_STR, dn, cch);
+
+                    log_printf("  Issuer DN=%S", dn);
+
+                    for (m = dn_to_realm_map; m; m = m->next) {
+                        if (!_wcsicmp(m->dn, dn)) {
+                            StringCchCopy(wbuffer, ARRAYLENGTH(wbuffer), m->realm);
+                            UnicodeStrToAnsi(strRealm, sizeof(strRealm), wbuffer);
+                            bGotRealm = TRUE;
+                            break;
+                        }
+                    }
+
+                    free(dn);
+                } while(FALSE);
+            }
+
+            /* Check if the certificate has a szOID_NT_PRINCIPAL_NAME
+               ("1.3.6.1.4.1.311.20.2.3") Subject ALt Name extension */
+            if (!bGotIdentity &&
+                CertGetNameString(pCertContext, CERT_NAME_UPN_TYPE, 0, NULL,
+                                  widname, ARRAYLENGTH(widname)) > 1) {
+                log_printf("   Found szOID_NT_PRINCIPAL_NAME for subject UPN=%S", widname);
+
+                bGotIdentity = TRUE;
+            }
+
+	    /* If we don't have a realm then skip the cert */
 	    if (!bGotRealm)
 		goto done_with_cert;
 
-	    CertGetNameString(pCertContext,
-			      CERT_NAME_EMAIL_TYPE,
-			      0,
-			      NULL,
-			      wemail,
-			      ARRAYLENGTH(wemail));
+	    if (CertGetNameString(pCertContext,
+                                  CERT_NAME_EMAIL_TYPE,
+                                  0,
+                                  NULL,
+                                  wemail,
+                                  ARRAYLENGTH(wemail)) <= 1 &&
+                bGotIdentity) {
+                StringCchCopy(wemail, ARRAYLENGTH(wemail), widname);
+            }
 
 	    log_printf("   Email: [%S]", wemail);
 
@@ -308,10 +431,12 @@ void kca_list_creds(void) {
 		goto done_with_cert;
 	    }
 
-	    AnsiStrToUnicode(wbuffer, sizeof(wbuffer), strRealm);
+            if (bGotRealm) {
+                AnsiStrToUnicode(wbuffer, sizeof(wbuffer), strRealm);
 
-	    kcdb_cred_set_attr(cred, attr_id_auth_realm,
-                               wbuffer, KCDB_CBSIZE_AUTO);
+                kcdb_cred_set_attr(cred, attr_id_auth_realm,
+                                   wbuffer, KCDB_CBSIZE_AUTO);
+            }
 
 	    CertGetNameString(pCertContext,
                               CERT_NAME_SIMPLE_DISPLAY_TYPE,
@@ -382,6 +507,8 @@ void kca_list_creds(void) {
     }
 
     log_printf("Done listing KCA certs ----");
+
+    free_dn_to_realm_map(&dn_to_realm_map);
 
     if (pCertContext) {
         CertFreeCertificateContext(pCertContext);

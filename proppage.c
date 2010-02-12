@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2007 Secure Endpoints Inc.
+ * Copyright (c) 2006-2007, 2010 Secure Endpoints Inc.
  *  
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -148,7 +148,7 @@ pp_cred_dlg_proc(HWND hwnd,
             BYTE           issuer_buf[1024];
             CRYPTUI_VIEWCERTIFICATE_STRUCT vcs;
             wchar_t title_fmt[128];
-            wchar_t realm[128];
+            wchar_t cert_name[128];
             wchar_t title[256];
             BOOL b;
 
@@ -216,10 +216,18 @@ pp_cred_dlg_proc(HWND hwnd,
 
             LoadString(hResModule, IDS_PP_TITLE,
                        title_fmt, ARRAYLENGTH(title_fmt));
-            cb = sizeof(realm);
-            kcdb_cred_get_attr(ps->cred, attr_id_auth_realm,
-                               NULL, realm, &cb);
-            StringCbPrintf(title, sizeof(title), title_fmt, realm);
+            cb = sizeof(cert_name);
+            if (KHM_FAILED(kcdb_cred_get_attr(ps->cred, attr_id_auth_realm,
+                                              NULL, cert_name, &cb))) {
+                cb = sizeof(cert_name);
+                if (KHM_FAILED(kcdb_cred_get_attr(ps->cred, attr_id_subj_email,
+                                                  NULL, cert_name, &cb))) {
+                    cb = sizeof(cert_name);
+                    kcdb_get_resource(ps->cred, KCDB_RES_DISPLAYNAME, 0, NULL, NULL,
+                                      cert_name, &cb);
+                }
+            }
+            StringCbPrintf(title, sizeof(title), title_fmt, cert_name);
 
             vcs.szTitle = title;
 

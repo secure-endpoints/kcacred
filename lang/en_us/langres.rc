@@ -256,7 +256,7 @@ BEGIN
     IDS_NC_NOREALM          "(Unknown realm)"
     IDS_LOC_MYSTORE         "Win32 ""My"" system store"
     IDS_NOTAVAILABLE        "(not available)"
-    IDS_PP_TITLE            "KCA certificate for realm %s"
+    IDS_PP_TITLE            "KCA certificate for %s"
     IDS_ATTR_SUBJECT_EMAIL_LONG_DESC "Subject (email)"
     IDS_ATTR_SUBJECT_EMAIL_SHORT_DESC "Subject (email)"
     IDS_ACTION_KCA_HELP     "Kerberized Certificates"

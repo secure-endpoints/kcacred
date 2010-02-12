@@ -259,7 +259,7 @@ static khm_int32 KHMAPI
 collect_kca_cert_names(khm_handle cred, void * rock)
 {
     wchar_t *str = (wchar_t *) rock;
-    wchar_t realm[KCDB_MAXCCH_NAME] = L"";
+    wchar_t cert_name[KCDB_MAXCCH_NAME] = L"";
     FILETIME ft_now;
     FILETIME ft_expire;
     khm_size cb;
@@ -272,11 +272,16 @@ collect_kca_cert_names(khm_handle cred, void * rock)
     if (CompareFileTime(&ft_now, &ft_expire) >= 0)
         return KHM_ERROR_SUCCESS;
 
-    cb = sizeof(realm);
+    cb = sizeof(cert_name);
 
-    if (KHM_SUCCEEDED(kcdb_cred_get_attr(cred, attr_id_auth_realm, NULL, realm, &cb)) &&
-        realm[0]) {
-        StringCchCat(str, COLLECT_STR_LEN, realm);
+    if (KHM_SUCCEEDED(kcdb_cred_get_attr(cred, attr_id_auth_realm, NULL, cert_name, &cb)) &&
+        cert_name[0] != L'\0') {
+        StringCchCat(str, COLLECT_STR_LEN, cert_name);
+        StringCchCat(str, COLLECT_STR_LEN, L"\n");
+    } else if ((cb = sizeof(cert_name)) &&
+               KHM_SUCCEEDED(kcdb_cred_get_attr(cred, attr_id_subj_email, NULL, cert_name, &cb))
+               && cert_name[0] != L'\0') {
+        StringCchCat(str, COLLECT_STR_LEN, cert_name);
         StringCchCat(str, COLLECT_STR_LEN, L"\n");
     }
 
