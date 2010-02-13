@@ -213,7 +213,8 @@ handle_kmsg_system(khm_int32 msg_type,
                     GetProcAddress(hm_netidmgr, API_khui_cw_get_ctx);
                 pkcdb_get_resource = (khm_int32 (KHMAPI *)(khm_handle, kcdb_resource_id,
                                                            khm_int32, khm_int32 *,
-                                                           void *, void *, khm_size *));
+                                                           void *, void *, khm_size *))
+                    GetProcAddress(hm_netidmgr, API_kcdb_get_resource);
             } while (FALSE);
 
             if (pkhui_cw_get_primary_id == NULL)
