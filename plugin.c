@@ -92,6 +92,15 @@ khui_nc_subtype
 khui_action_context *
 (KHMAPI * pkhui_cw_get_ctx)(khui_new_creds * c);
 
+khm_int32
+(KHMAPI * pkcdb_get_resource)(khm_handle h,
+                              kcdb_resource_id r_id,
+                              khm_int32 flags,
+                              khm_int32 *prflags,
+                              void * vparam,
+                              void * buf,
+                              khm_size * pcb_buf);
+
 khm_int32 KHMAPI
 int_khui_cw_get_primary_id(khui_new_creds * nc, khm_handle * h)
 {
@@ -122,6 +131,23 @@ int_khui_cw_get_ctx(khui_new_creds * nc)
     return &nc->ctx;
 }
 
+/* This is obviously a very stripped down implementation that only
+   attempts to implement the bare minimum functionality needed by this
+   plug-in. */
+khm_int32 KHMAPI
+int_kcdb_get_resource(khm_handle h,
+                      kcdb_resource_id r_id,
+                      khm_int32 flags,
+                      khm_int32 *prflags,
+                      void * vparam,
+                      void * buf,
+                      khm_size * pcb_buf)
+{
+    if (r_id == KCDB_RES_DISPLAYNAME) {
+        return kcdb_buf_get_attr_string(h, KCDB_ATTR_NAME, buf, pcb_buf, 0);
+    }
+    return KHM_ERROR_NOT_FOUND;
+}
 
 #endif
 
@@ -185,6 +211,9 @@ handle_kmsg_system(khm_int32 msg_type,
                     GetProcAddress(hm_netidmgr, API_khui_cw_get_subtype);
                 pkhui_cw_get_ctx = (khui_action_context * (KHMAPI *)(khui_new_creds *))
                     GetProcAddress(hm_netidmgr, API_khui_cw_get_ctx);
+                pkcdb_get_resource = (khm_int32 (KHMAPI *)(khm_handle, kcdb_resource_id,
+                                                           khm_int32, khm_int32 *,
+                                                           void *, void *, khm_size *));
             } while (FALSE);
 
             if (pkhui_cw_get_primary_id == NULL)
@@ -198,6 +227,9 @@ handle_kmsg_system(khm_int32 msg_type,
 
             if (pkhui_cw_get_ctx == NULL)
                 pkhui_cw_get_ctx = int_khui_cw_get_ctx;
+
+            if (pkcdb_get_resource == NULL)
+                pkcdb_get_resource = int_kcdb_get_resource;
 #endif
 
             /* Add the icon now.  On NIM v2.x, doing so after tokens

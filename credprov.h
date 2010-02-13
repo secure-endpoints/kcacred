@@ -384,12 +384,14 @@ typedef int khui_nc_subtype;
 #define API_khui_cw_get_result      "khui_cw_get_result"
 #define API_khui_cw_get_subtype     "khui_cw_get_subtype"
 #define API_khui_cw_get_ctx         "khui_cw_get_ctx"
+#define API_kcdb_get_resource       "kcdb_get_resource"
 #else
 #define NIMDLLNAME                  L"nidmgr32.dll"
 #define API_khui_cw_get_primary_id  "_khui_cw_get_primary_id@8"
 #define API_khui_cw_get_result      "_khui_cw_get_result@4"
 #define API_khui_cw_get_subtype     "_khui_cw_get_subtype@4"
 #define API_khui_cw_get_ctx         "_khui_cw_get_ctx@4"
+#define API_kcdb_get_resource       "_kcdb_get_resource@28"
 #endif
 
 extern khm_int32
@@ -404,12 +406,36 @@ extern khui_nc_subtype
 extern khui_action_context *
 (KHMAPI * pkhui_cw_get_ctx)(khui_new_creds * c);
 
-#define khui_cw_get_primary_id   (*pkhui_cw_get_primary_id)
+#define khui_cw_get_primary_id  (*pkhui_cw_get_primary_id)
 #define khui_cw_get_result      (*pkhui_cw_get_result)
 #define khui_cw_get_subtype     (*pkhui_cw_get_subtype)
 #define khui_cw_get_ctx         (*pkhui_cw_get_ctx)
+#define kcdb_get_resource       (*pkcdb_get_resource)
 
 #define KHUI_CNFLAG_INSTANCE    KHUI_CNFLAG_PLURAL
+
+/*! \brief KCDB Resource IDs */
+typedef enum tag_kcdb_resource_id {
+    KCDB_RES_T_NONE = 0,
+
+    KCDB_RES_T_BEGINSTRING,     /* Internal marker*/
+
+    KCDB_RES_DISPLAYNAME,       /*!< Localized display name */
+    KCDB_RES_DESCRIPTION,       /*!< Localized description */
+    KCDB_RES_TOOLTIP,           /*!< A tooltip */
+
+    KCDB_RES_INSTANCE,          /*!< Name of an instance of objects
+                                  belonging to this class */
+
+    KCDB_RES_T_ENDSTRING,       /* Internal marker */
+
+    KCDB_RES_T_BEGINICON = 1024, /* Internal marker */
+
+    KCDB_RES_ICON_NORMAL,       /*!< Icon (normal) */
+    KCDB_RES_ICON_DISABLED,     /*!< Icon (disabled) */
+
+    KCDB_RES_T_ENDICON,         /* Internal marker */
+} kcdb_resource_id;
 
 #endif
 
