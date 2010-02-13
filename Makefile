@@ -34,6 +34,8 @@
 #
 # AUXCFLAGS : Auxilliary C flags to pass to the command line of CC
 #
+# AUXLINKFLAGS : Auxiliary flags to pass to the linker
+#
 
 # Configuration settings
 # ----------------------
@@ -201,15 +203,15 @@ C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AU
 
 !ifdef DEBUG
 #DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMTD /IMPLIB:$(DEST)\$(@B).lib $**
-DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) $(AUXLINKFLAGS) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
 !else
 #DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /NODEFAULTLIB:LIBCMT /IMPLIB:$(DEST)\$(@B).lib $**
-DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) $(AUXLINKFLAGS) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
 !endif
 
 DLLRESLINK=$(LINK) /NOLOGO /DLL /NOENTRY /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" $**
 
-EXECONLINK=$(LINK) /NOLOGO $(ldebug) $(conlflags) $(lndeflibflag) $(conlibsmt) /OUT:$@ $**
+EXECONLINK=$(LINK) /NOLOGO $(ldebug) $(conlflags) $(lndeflibflag) $(conlibsmt) $(AUXLINKFLAGS) /OUT:$@ $**
 
 RC2RES=$(RC) $(RFLAGS) $(rincflags) /fo "$@" $**
 
@@ -460,7 +462,7 @@ MSIFILE=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)-$(CPU)$(
 msi: $(MSIFILE)
 
 $(MSIFILE): $(OBJ)\kcaplugin.wixobj $(OBJ)\kcaplugin-core.wixobj
-	light -nologo -out $@ $**
+	light -nologo -sval -out $@ $**
         $(CODESIGN_USERLAND)
 
 $(OBJ)\kcaplugin.wixobj: installer\kcaplugin.wxs $(DLL) $(HELPFILE)
