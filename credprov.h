@@ -406,14 +406,6 @@ extern khui_nc_subtype
 extern khui_action_context *
 (KHMAPI * pkhui_cw_get_ctx)(khui_new_creds * c);
 
-#define khui_cw_get_primary_id  (*pkhui_cw_get_primary_id)
-#define khui_cw_get_result      (*pkhui_cw_get_result)
-#define khui_cw_get_subtype     (*pkhui_cw_get_subtype)
-#define khui_cw_get_ctx         (*pkhui_cw_get_ctx)
-#define kcdb_get_resource       (*pkcdb_get_resource)
-
-#define KHUI_CNFLAG_INSTANCE    KHUI_CNFLAG_PLURAL
-
 /*! \brief KCDB Resource IDs */
 typedef enum tag_kcdb_resource_id {
     KCDB_RES_T_NONE = 0,
@@ -436,6 +428,23 @@ typedef enum tag_kcdb_resource_id {
 
     KCDB_RES_T_ENDICON,         /* Internal marker */
 } kcdb_resource_id;
+
+extern khm_int32
+(KHMAPI * pkcdb_get_resource)(khm_handle h,
+                              kcdb_resource_id r_id,
+                              khm_int32 flags,
+                              khm_int32 *prflags,
+                              void * vparam,
+                              void * buf,
+                              khm_size * pcb_buf);
+
+#define khui_cw_get_primary_id  (*pkhui_cw_get_primary_id)
+#define khui_cw_get_result      (*pkhui_cw_get_result)
+#define khui_cw_get_subtype     (*pkhui_cw_get_subtype)
+#define khui_cw_get_ctx         (*pkhui_cw_get_ctx)
+#define kcdb_get_resource       (*pkcdb_get_resource)
+
+#define KHUI_CNFLAG_INSTANCE    KHUI_CNFLAG_PLURAL
 
 #endif
 
