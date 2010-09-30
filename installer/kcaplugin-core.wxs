@@ -124,6 +124,9 @@
         <File Id="file_kpkcs11_dll" Name="kpkcs11.dll" KeyPath="yes" Source="$(var.KPKCS11BinDir)\kpkcs11.dll" />
       </Component>
 
+      <!-- Heimdal Compatibility -->
+      <Merge Id="HeimdalCompat" Language="0" SourceFile="$(var.HeimdalRedistDir)\Heimdal-krbcompat.msm" DiskId="1" />
+
       <?if $(var.Platform) = "x86" ?>
       <?ifndef NOMODUTIL?>
       <Directory Id="dirModutil" Name="modutil">
@@ -168,6 +171,7 @@
       <ComponentRef Id="_kcacreds_en_us" />
       <ComponentRef Id="_kcaplugin_chm" />
       <ComponentRef Id="_custom_realm_map" />
+      <MergeRef Id="HeimdalCompat" />
       <Feature Id="DebugSyms" Title="Debug Symbols" Level="100">
         <ComponentRef Id="_kcacreds_debugsym" />
       </Feature>

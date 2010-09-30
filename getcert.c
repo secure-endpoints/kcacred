@@ -61,12 +61,6 @@
 #include <string.h>
 #include <fcntl.h>
 
-# define WSHELPER
-#pragma warning(push)
-#pragma warning(disable: 4210 4214)
-# include <wshelper.h>
-#pragma warning(pop)
-
 #ifdef HAVE_SYS_FILIO_H
 # include <sys/filio.h>
 #endif
@@ -84,7 +78,7 @@
 # define __WINCRYPT_H__		// PREVENT windows.h from including wincrypt.h
 				// since wincrypt.h and openssl namepsaces collide
 				//  ex. X509_NAME is #define'd and typedef'd ...
-# include <winsock.h>		// Must be included before <windows.h> !!!
+# include <ws2tcpip.h>		// Must be included before <windows.h> !!!
 # include <windows.h>
 # include <netidmgr.h>
 # include <openssl/pem.h>
@@ -231,12 +225,9 @@ get_cert_authent_K5(krb5_context k5_context,
     /* GENERATE KRB5 AUTHENTICATOR FOR CA SERVER */
     
     /* obtain ticket & session key */
-    if (result = krb5_build_principal_ext(k5_context, &mcreds.server,
-                                          (unsigned int)strlen(realm),
-                                          realm,
-                                          (unsigned int)strlen(CA_SERVICE), CA_SERVICE,
-                                          (unsigned int)strlen(ca_hostname), ca_hostname,
-                                          0))
+    if (result = krb5_build_principal(k5_context, &mcreds.server,
+                                      (unsigned int)strlen(realm),
+                                      realm, CA_SERVICE, ca_hostname, NULL))
     {
         const char * result_text = error_message(result);
 
@@ -277,14 +268,15 @@ get_cert_authent_K5(krb5_context k5_context,
     }
 
     /* Verify caller can hold session key, and return it */
-    if (*sess_len_ptr < (int) outcreds->keyblock.length) {
+    if (*sess_len_ptr < (int) outcreds->session.keyvalue.length) {
         *err_ptr = "get_cert_authent_K5: Internal error; not enough room to hold session key.";
         krb5_free_creds(k5_context, outcreds);
         retval = KX509_STATUS_CLNT_FIX;
 	goto cleanup;
     }
-    *sess_len_ptr = outcreds->keyblock.length;
-    memcpy(sess_key_result, outcreds->keyblock.contents, outcreds->keyblock.length);
+    *sess_len_ptr = outcreds->session.keyvalue.length;
+    memcpy(sess_key_result, outcreds->session.keyvalue.data,
+           outcreds->session.keyvalue.length);
     *k5_endtime   = outcreds->times.endtime;
     *k5_renew_till = outcreds->times.renew_till;
 

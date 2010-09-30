@@ -73,7 +73,7 @@
 # define __WINCRYPT_H__		// PREVENT windows.h from including wincrypt.h
 				// since wincrypt.h and openssl namepsaces collide
 				//  ex. X509_NAME is #define'd and typedef'd ...
-# include <winsock.h>		// Must be included before <windows.h> !!!
+# include <ws2tcpip.h>		// Must be included before <windows.h> !!!
 # include <windows.h>
 # include <netidmgr.h>
 # include <openssl/pem.h>
@@ -140,15 +140,15 @@ int get_krb5_realm(krb5_context k5_context, char *realm,
         goto cleanup;
     }
 
-    if (krb5_princ_realm(k5_context, me)->length >= cch_realm) {
+    if (strlen(krb5_principal_get_realm(k5_context, me)) >= cch_realm) {
         _report_cs0(KHERR_DEBUG_1, L"get_krb5_realm: realm name too long!");
         _resolve();
         *err_msg = "Realm name too long.";
         retcode = KX509_STATUS_CLNT_BAD;
         goto cleanup;
     }
-    memcpy(realm, krb5_princ_realm(k5_context, me)->data, krb5_princ_realm(k5_context, me)->length);
-    realm[krb5_princ_realm(k5_context, me)->length] = '\0';
+
+    strcpy_s(realm, cch_realm, krb5_principal_get_realm(k5_context, me));
 
  cleanup:
     if (cc)

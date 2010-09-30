@@ -25,7 +25,7 @@
 #include <tchar.h>
 #include <stdio.h>
 
-#include <winsock.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include "debug.h" 
 

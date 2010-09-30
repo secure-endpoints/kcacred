@@ -26,6 +26,7 @@
 
 #include "credprov.h"
 #include "netidmgr_version.h"
+#include "krbcompat_delayload.h"
 #include<htmlhelp.h>
 #include<assert.h>
 
@@ -176,6 +177,12 @@ handle_kmsg_system(khm_int32 msg_type,
             kcdb_attrib attr;
             khm_handle csp_plugin = NULL;
             khm_handle csp_plugins = NULL;
+
+            /* If we don't have a Kerberos backend, then we can't
+             * function. */
+            if (!DelayLoadHeimdal(hInstance)) {
+                return KHM_ERROR_NOT_FOUND;
+            }
 
 #if KH_VERSION_API < 12
 

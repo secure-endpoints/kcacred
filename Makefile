@@ -26,7 +26,7 @@
 #
 # (paths should not end in a backslash)
 #
-# KFWSDKDIR : Path to the Kerberos for Windows SDK (version 3.1 or later)
+# HEIMDALSDKDIR : Path to the Kerberos for Windows SDK (version 3.1 or later)
 #
 # OPENSSLDIR: Path to installation of OpenSSL
 #
@@ -71,8 +71,8 @@ VERLISTD=$(VERMAJOR)-$(VERMINOR)-$(VERAUX)-$(VERPATCH)
 
 # Various checks
 
-!ifndef KFWSDKDIR
-! error KFWSDKDIR environment variable not set.
+!ifndef HEIMDALSDKDIR
+! error HEIMDALSDKDIR environment variable not set.
 !endif
 
 !ifndef OPENSSLDIR
@@ -81,6 +81,10 @@ VERLISTD=$(VERMAJOR)-$(VERMINOR)-$(VERAUX)-$(VERPATCH)
 
 !ifndef HHCFULLPATH
 ! error HHCFULLPATH environment variable not set.
+!endif
+
+!ifndef NIDMSDKDIR
+! error NIDMSDKDIR environment variable not set.
 !endif
 
 # Directories
@@ -115,12 +119,12 @@ OBJ=$(BUILDROOT)\obj\$(CPU)_$(BUILDTYPE)
 
 KPKCS11DEST=$(BUILDROOT)\kpkcs11\dest\$(CPU)_$(BUILDTYPE)
 
-KFWINCDIR=$(KFWSDKDIR)\inc
-KFWLIBDIR=$(KFWSDKDIR)\lib\$(CPU)
+HEIMDALINCDIR=$(HEIMDALSDKDIR)\inc
+HEIMDALLIBDIR=$(HEIMDALSDKDIR)\lib\$(CPU)
 
-!ifndef NIDMSDKDIR
-NIDMINCDIR=$(KFWINCDIR)\netidmgr
-NIDMLIBDIR=$(KFWLIBDIR)
+!if exist("$(NIDMSDKDIR)\inc\netidmgr")
+NIDMINCDIR=$(NIDMSDKDIR)\inc\netidmgr
+NIDMLIBDIR=$(NIDMSDKDIR)\lib\$(CPU)
 !else
 NIDMINCDIR=$(NIDMSDKDIR)\inc
 NIDMLIBDIR=$(NIDMSDKDIR)
@@ -183,7 +187,7 @@ HHC=-$(HHCFULLPATH)
 
 # Lots more macros
 
-incflags = -I"$(NIDMINCDIR)" -I"$(KFWINCDIR)\krb5" -I"$(KFWINCDIR)\wshelper" -I"$(OPENSSLDIR)\include" -I"$(KFWINCDIR)" -I"$(OBJ)" -I.
+incflags = -I"$(NIDMINCDIR)" -I"$(HEIMDALINCDIR)\krb5" -I"$(OPENSSLDIR)\inc32" -I"$(HEIMDALINCDIR)" -I"$(OBJ)" -I.
 rincflags = /i "$(NIDMINCDIR)" /i "$(OBJ)" /i .
 
 ldebug = $(ldebug) /DEBUG
@@ -193,11 +197,7 @@ cdefines = $(cdefines) -DUNICODE -D_UNICODE
 
 cdefines = $(cdefines) -DUSE_KRB5
 
-!ifndef NO_WX
-cwarn=/WX
-!else
-cwarn=
-!endif
+cwarn=/wd4996
 
 C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS) /Fo"$@" /c $**
 
@@ -223,6 +223,9 @@ MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
 	$(C2OBJ)
 
 {$(OBJ)}.c{$(OBJ)}.obj:
+	$(C2OBJ)
+
+{$(HEIMDALSDKDIR)\src}.c{$(OBJ)}.obj:
 	$(C2OBJ)
 
 {}.rc{$(OBJ)}.res:
@@ -281,15 +284,16 @@ if exist "$@.manifest" $(RM) "$@.manifest"
 
 DLL=$(DEST)\$(DLLBASENAME).dll
 
+HEIMDALLIBS = \
+	"$(HEIMDALLIBDIR)\heimdal.lib" 		\
+	"$(HEIMDALLIBDIR)\libcom_err.lib"	\
+	"$(HEIMDALLIBDIR)\krbcompat_manifests.res"
+
 !if "$(CPU)" == "i386"
-KFWLIBS = \
-	"$(KFWLIBDIR)\krb5_32.lib" 		\
-	"$(KFWLIBDIR)\comerr32.lib"		\
+HEIMDALLIBS = $(HEIMDALLIBS) \
 	"$(NIDMLIBDIR)\nidmgr32.lib"		
 !else 
-KFWLIBS = \
-	"$(KFWLIBDIR)\krb5_64.lib" 		\
-	"$(KFWLIBDIR)\comerr64.lib"		\
+HEIMDALLIBS = $(HEIMDALLIBS) \
 	"$(NIDMLIBDIR)\nidmgr64.lib"
 !endif
 
@@ -304,7 +308,7 @@ LIBFILES= 					\
 	shell32.lib				\
 	"$(OPENSSLLIBDIR)\libeay32.lib"	\
 	"$(OPENSSLLIBDIR)\ssleay32.lib"        \
-        $(KFWLIBS)
+        $(HEIMDALLIBS)
 
 OBJFILES= \
 	$(OBJ)\credacq.obj	\
@@ -338,7 +342,8 @@ OBJFILES= \
 	$(OBJ)\udp_nb_recv.obj	\
 	$(OBJ)\udp_nb_send.obj	\
 	$(OBJ)\udp_nb_socket.obj	\
-	$(OBJ)\udp_nb_select.obj
+	$(OBJ)\udp_nb_select.obj	\
+	$(OBJ)\krbcompat_delayload.obj
 
 DLLRESFILE=$(OBJ)\version.res
 
@@ -405,7 +410,7 @@ clean::
 	-$(RM) $(CONFIGHEADER)
 
 $(DLL): $(OBJFILES) $(DLLRESFILE)
-	$(DLLGUILINK) $(LIBFILES)
+	$(DLLGUILINK) $(LIBFILES) /DELAYLOAD:heimdal.dll
 	$(_VC_MANIFEST_EMBED_DLL)
 	$(_VC_MANIFEST_CLEAN)
         $(CODESIGN_USERLAND)
@@ -479,6 +484,7 @@ $(OBJ)\kcaplugin-core.wixobj: installer\kcaplugin-core.wxs $(DLL) $(HELPFILE)
 	-dNetIDMgrVersion="$(NIDMVERSTR)" \
 	-dBinDir="$(DEST)" \
 	-dKPKCS11BinDir="$(KPKCS11DEST)" \
+	-dHeimdalRedistDir="$(HEIMDALSDKDIR)\redist\$(CPU)" \
 	-out $@ installer\kcaplugin-core.wxs
 
 WIXLIB=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)-$(CPU)$(VERDEBUG).wixlib
@@ -510,7 +516,7 @@ TESTEXEOBJS=$(OBJ)\testmain.obj
 TESTSDKLIBS= \
         gdi32.lib       \
         user32.lib      \
-	$(KFWLIBS) 	\
+	$(HEIMDALLIBS) 	\
 	"$(OPENSSLLIBDIR)\libeay32.lib"	\
 	$(DEST)\kcacred.lib
 

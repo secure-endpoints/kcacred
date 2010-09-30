@@ -1,34 +1,19 @@
 @echo off
-if "%1"=="retail" goto retail
-if "%1"=="debug" goto debug
 
-echo.
-echo setupbuild [retail][debug]
-exit /b
+echo Setting up environment
+call "c:\Program Files\Microsoft SDKs\Windows\v7.0\Bin\SetEnv" %1 %2 %3 %4
 
-:retail
-echo Setting up environment for RETAIL
-call "D:\WindowsSDK\v6.1\bin\SetEnv.cmd" /xp /x86 /Release
-set NIDMSDKDIR=C:\work\netidmgrcpp\obj\i386\rel
-goto common
-
-:debug
-echo Setting up environment for DEBUG
-call "D:\WindowsSDK\v6.1\bin\SetEnv.cmd" /xp /x86 /Debug
-set NIDMSDKDIR=C:\work\netidmgrcpp\obj\i386\dbg
-goto common
-
-:common
-set KFWSDKDIR=c:\work\kfw-3.2.2-sdk
-set OPENSSLDIR=c:\work\openssl-0.9.8i
-set HHCFULLPATH="C:\Program Files\HTML Help Workshop\hhc.exe"
+set NIDMSDKDIR=C:\src\kerberos\kfw-3.2.2
+set HEIMDALSDKDIR=c:\src\heimdal\out\sdk
+set OPENSSLDIR=c:\src\openssl-1.0.0a
+set HHCFULLPATH="C:\Program Files (x86)\HTML Help Workshop\hhc.exe"
 for %%i in (candle.exe) do (
         if "%%~$PATH:i"=="" goto nowix
         echo candle.exe found at : %%~$PATH:i
 )
 goto headout1
 :nowix
-set PATH=%PATH%;c:\work\wix3
+set PATH=%PATH%;c:\tools\WiX3
 :headout1
 for %%i in (gtags.exe) do (
         if "%%~$PATH:i"=="" goto nogtags
@@ -36,7 +21,7 @@ for %%i in (gtags.exe) do (
 )
 goto headout2
 :nogtags
-set PATH=%PATH%;c:\work\global\bin
+rem set PATH=%PATH%;c:\work\global\bin
 :headout2
 for %%i in (runemacs.exe) do (
         if "%%~$PATH:i"=="" goto noemacs
@@ -44,7 +29,7 @@ for %%i in (runemacs.exe) do (
 )
 goto headout3
 :noemacs
-set PATH=%PATH%;c:\emacs-22.1\bin\
+rem set PATH=%PATH%;c:\emacs-22.1\bin\
 :headout3
 title KCA Build
 exit /b

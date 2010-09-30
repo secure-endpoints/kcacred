@@ -129,7 +129,7 @@ MC=mc
 
 # Lots more macros
 
-incflags = -I"$(OPENSSLDIR)\include" -I"$(OBJ)" -I.
+incflags = -I"$(OPENSSLDIR)\inc32" -I"$(OBJ)" -I.
 rincflags = /i "$(OBJ)" /i .
 
 ldebug = $(ldebug) /DEBUG
@@ -137,11 +137,7 @@ cdebug = $(cdebug) -Os -Zi
 
 cdefines = $(cdefines) -D_CRT_SECURE_NO_DEPRECATE -D_MBCS -D_USERDLL -DKPKCS11_EXPORTS
 
-!ifndef NO_WX
-cwarn=/WX
-!else
 cwarn=
-!endif
 
 C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS)  /Fo"$@" /c $**
 

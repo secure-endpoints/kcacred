@@ -90,10 +90,12 @@
 #endif /* WIN32 */
 
 #ifdef WSHELPER
+#if 0
 #pragma warning(push)
 #pragma warning(disable: 4210 4214)
 # include <wshelper.h>
 #pragma warning(pop)
+#endif
 #else /* WSHELPER */
 # include <arpa/inet.h>
 # include <arpa/nameser.h>
@@ -236,8 +238,8 @@ get_kca_list(const char *realm,
     int type, class;
     int priority, weight, size, len, numanswers, numqueries, rdlen;
     unsigned short port;
-#endif
     const int hdrsize = sizeof(HEADER);
+#endif
     struct srv_dns_entry *head = NULL;
     struct srv_dns_entry *srv = NULL, *entry = NULL;
     char **list = NULL;
