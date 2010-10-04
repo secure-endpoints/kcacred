@@ -110,7 +110,7 @@ int get_krb5_realm(krb5_context k5_context, char *realm,
 
     if(tkt_cache_name) {
         if (result = krb5_cc_resolve(k5_context, tkt_cache_name, &cc)) {
-            const char * result_text = error_message(result);
+	    const char * result_text = krb5_get_error_message(k5_context, result);
 	    _report_cs1(KHERR_DEBUG_1, L"get_cert_authent_K5: krb5_cc_resolve: %1!S!",
                         _cptr(result_text));
             _resolve();
@@ -120,7 +120,7 @@ int get_krb5_realm(krb5_context k5_context, char *realm,
         }
     } else {
         if (result = krb5_cc_default(k5_context, &cc)) {
-            const char * result_text = error_message(result);
+  	    const char * result_text = krb5_get_error_message(k5_context, result);
             _report_cs1(KHERR_DEBUG_1, L"get_krb5_realm: krb5_cc_default: %1!S!", 
                         _cptr(result_text));
             _resolve();
@@ -131,7 +131,7 @@ int get_krb5_realm(krb5_context k5_context, char *realm,
     }
 
     if (result = krb5_cc_get_principal(k5_context, cc, &me)) {
-        const char * result_text = error_message(result);
+        const char * result_text = krb5_get_error_message(k5_context, result);
         _report_cs1(KHERR_DEBUG_1, L"get_krb5_realm: krb5_cc_get_principal: %1!S!",
                     _cptr(result_text));
         _resolve();

@@ -1050,7 +1050,7 @@ int os_getCertAndKey(
 )
 
 {
-	krb5_context	k5_context;
+	krb5_context	k5_context = NULL;
 	krb5_ccache	cc;
 	krb5_error_code	k5_rc = 0;
 	krb5_creds	match_creds;
@@ -1070,7 +1070,8 @@ int os_getCertAndKey(
 	if ((k5_rc = krb5_init_context(&k5_context)))
 	{
 		log_printf("os_getCertAndKey: %s initializing K5 context, "
-			"check configuration.\n", error_message(k5_rc));
+                           "check configuration.\n",
+                           (k5_context != NULL) ? krb5_get_error_message(k5_context, k5_rc) : "");
 		return 0;
 	}
 
@@ -1079,7 +1080,7 @@ int os_getCertAndKey(
 	if ((k5_rc = krb5_cc_default(k5_context, &cc)))
 	{
 		log_printf("os_getCertAndKey: %s resolving default credentials cache.\n",
-			error_message(k5_rc));
+			krb5_get_error_message(k5_context, k5_rc));
 		return 0;
 	}
 
@@ -1088,7 +1089,7 @@ int os_getCertAndKey(
 	if ((k5_rc = krb5_cc_get_principal(k5_context, cc, &match_creds.client)))
 	{
 		log_printf("os_getCertAndKey: %s retreiving primary principal from "
-			"credentials cache.\n", error_message(k5_rc));
+			"credentials cache.\n", krb5_get_error_message(k5_context, k5_rc));
 		return 0;
 	}
 
@@ -1097,7 +1098,7 @@ int os_getCertAndKey(
 						&match_creds.server)))
 	{
 		log_printf("os_getCertAndKey: %s creating principal structure for "
-				"server principal\n", error_message(k5_rc));
+				"server principal\n", krb5_get_error_message(k5_context, k5_rc));
 		return 0;
 	}
 
@@ -1105,7 +1106,7 @@ int os_getCertAndKey(
 	{
 		log_printf("os_getCertAndKey: %s finding the credentials containing the "
 			"private key and certificate in the credentials cache.\n",
-			error_message(k5_rc));
+			krb5_get_error_message(k5_context, k5_rc));
 		return 0;
 	}
 
@@ -1460,19 +1461,19 @@ int checkTokenValidity_KRB5()
 
 	if ((k5_rc = krb5_init_context(&k5_context))) {
 		log_printf("checkTokenValidity_KRB5: %s getting krb5_init_context\n",
-			error_message(k5_rc));
+			krb5_get_error_message(k5_context, k5_rc));
 		return(last_result = 0);
 	}
 
 	if ((k5_rc = krb5_cc_default(k5_context, &cc))) {
 		log_printf("checkTokenValidity_KRB5: %s getting krb5_cc_default\n",
-			error_message(k5_rc));
+			krb5_get_error_message(k5_context, k5_rc));
 		return(last_result = 0);
 	}
 
 	if ((k5_rc = krb5_cc_get_principal(k5_context, cc, &match_creds.client))) {
 		log_printf("checkTokenValidity_KRB5: %s from krb5_cc_get_principal\n",
-			error_message(k5_rc));  
+			krb5_get_error_message(k5_context, k5_rc));  
 		return(last_result = 0);
 	}
        
@@ -1480,7 +1481,7 @@ int checkTokenValidity_KRB5()
   					 KX509_CC_PRINCIPAL, KRB5_NT_UNKNOWN,
   					 &match_creds.server))) {
 		log_printf("checkTokenValidity_KRB5: %s from krb5_sname_to_principal\n",
-			error_message(k5_rc));
+			krb5_get_error_message(k5_context, k5_rc));
 		return(last_result = 0);
 	}
 
@@ -1489,7 +1490,7 @@ int checkTokenValidity_KRB5()
 		/* Not there _sniff_ */
 		krb5_free_cred_contents(k5_context, &match_creds);
 		log_printf("checkTokenValidity_KRB5: %s from krb5_cc_retrieve_cred\n",
-			error_message(k5_rc));
+			krb5_get_error_message(k5_context, k5_rc));
 		return(last_result = 0);
 	}
 

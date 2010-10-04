@@ -189,7 +189,7 @@ get_cert_authent_K5(krb5_context k5_context,
 
     if (tkt_cache_name) {
         if (result = krb5_cc_resolve(k5_context, tkt_cache_name, &cc)) {
-            const char * result_text = error_message(result);
+            const char * result_text = krb5_get_error_message(k5_context, result);
 
             _report_cs1(KHERR_DEBUG_1, L"get_cert_authent_K5: krb5_cc_resolve: %1!S!",
                         _cptr(result_text));
@@ -200,7 +200,7 @@ get_cert_authent_K5(krb5_context k5_context,
         }
     } else {
         if (result = krb5_cc_default(k5_context, &cc)) {
-            const char * result_text = error_message(result);
+            const char * result_text = krb5_get_error_message(k5_context, result);
 
             _report_cs1(KHERR_DEBUG_1, L"get_cert_authent_K5: krb5_cc_default: %1!S!",
                         _cptr(result_text));
@@ -212,7 +212,7 @@ get_cert_authent_K5(krb5_context k5_context,
     }
 
     if (result = krb5_cc_get_principal(k5_context, cc, &mcreds.client)) {
-        const char * result_text = error_message(result);
+        const char * result_text = krb5_get_error_message(k5_context, result);
 
         _report_cs1(KHERR_DEBUG_1, L"get_cert_authent_K5: krb5_cc_get_principal: %1!S!",
                     _cptr(result_text));
@@ -229,7 +229,7 @@ get_cert_authent_K5(krb5_context k5_context,
                                       (unsigned int)strlen(realm),
                                       realm, CA_SERVICE, ca_hostname, NULL))
     {
-        const char * result_text = error_message(result);
+        const char * result_text = krb5_get_error_message(k5_context, result);
 
         _report_cs1(KHERR_DEBUG_1, L"get_cert_authent_K5: krb5_build_principal_ext: %1!S!",
                     _cptr(result_text));
@@ -242,8 +242,8 @@ get_cert_authent_K5(krb5_context k5_context,
 
   retry_retcred:
     if (retval = krb5_get_credentials(k5_context, 0,
-					cc, &mcreds, &outcreds)) {
-        const char * result_text = error_message(result);
+                                      cc, &mcreds, &outcreds)) {
+        const char * result_text = krb5_get_error_message(k5_context, retval);
         _report_cs1(KHERR_DEBUG_1, L"get_cert_authent_K5: krb5_cc_retrieve_cred: %1!S!",
                     _cptr(result_text));
         _resolve();
@@ -761,7 +761,7 @@ int getcert(RSA	        **rsa,
     }
 
     if ((k5_result = krb5_init_context(&k5_context))) {
-        const char * result_text = error_message(k5_result);
+        const char * result_text = krb5_get_error_message(k5_context, k5_result);
 
         _report_cs1(KHERR_DEBUG_1, L"getcert: unable to initialize Kerberos 5 context: %1!S!",
                     _cptr(result_text));
