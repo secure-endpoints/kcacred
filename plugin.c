@@ -180,7 +180,8 @@ handle_kmsg_system(khm_int32 msg_type,
 
             /* If we don't have a Kerberos backend, then we can't
              * function. */
-            if (!DelayLoadHeimdal(hInstance)) {
+            if (!DelayLoadHeimdal()) {
+		_reportf("Can't initialize a Kerberos backend.  LastError=%d", GetLastError());
                 return KHM_ERROR_NOT_FOUND;
             }
 
