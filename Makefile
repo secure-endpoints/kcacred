@@ -285,9 +285,7 @@ if exist "$@.manifest" $(RM) "$@.manifest"
 DLL=$(DEST)\$(DLLBASENAME).dll
 
 HEIMDALLIBS = \
-	"$(HEIMDALLIBDIR)\heimdal.lib" 		\
-	"$(HEIMDALLIBDIR)\libcom_err.lib"	\
-	"$(HEIMDALLIBDIR)\krbcompat_manifests.res"
+	"$(HEIMDALLIBDIR)\heimdal.lib"
 
 !if "$(CPU)" == "i386"
 HEIMDALLIBS = $(HEIMDALLIBS) \
