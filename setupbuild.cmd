@@ -1,19 +1,26 @@
 @echo off
 
 echo Setting up environment
-call "c:\Program Files\Microsoft SDKs\Windows\v7.0\Bin\SetEnv" %1 %2 %3 %4
+call "c:\Program Files\Microsoft SDKs\Windows\v6.1\Bin\SetEnv" %1 %2 %3 %4
 
-set NIDMSDKDIR=C:\src\kerberos\kfw-3.2.2
+set NIDMSDKDIR=C:\src\kerberos\kfw-3.2.2.6
 set HEIMDALSDKDIR=c:\src\heimdal\out\sdk
-set OPENSSLDIR=c:\src\openssl-1.0.0a
+set OPENSSLDIR=c:\src\openssl\0.9.8g
 set HHCFULLPATH="C:\Program Files (x86)\HTML Help Workshop\hhc.exe"
+set AUXLINKFLAGS=/NODEFAULTLIB:LIBCMT /NODEFAULTLIB:LIBCMTD
+
+set CODESIGN_DESC=KCA Plug-in for Network Identity Manager
+set CODESIGN_URL=http://www.secure-endpoints.com/kcacred
+set CODESIGN_TIMESTAMP=http://timestamp.verisign.com/scripts/timestamp.dll
+
+
 for %%i in (candle.exe) do (
         if "%%~$PATH:i"=="" goto nowix
         echo candle.exe found at : %%~$PATH:i
 )
 goto headout1
 :nowix
-set PATH=%PATH%;c:\tools\WiX3
+set PATH=%PATH%;c:\tools\wix.3.0.5419.0
 :headout1
 for %%i in (gtags.exe) do (
         if "%%~$PATH:i"=="" goto nogtags
