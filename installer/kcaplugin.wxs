@@ -95,6 +95,9 @@
     <Condition Message="This product requires Kerberos for Windows 3.1.0 or later to be installed">
         Installed Or (KFWVERSION And KFWVERSIONMAJOR And (KFWVERSIONMAJOR &gt; "#3" Or (KFWVERSIONMAJOR = "#3" And KFWVERSIONMINOR &gt;= "#1")))
     </Condition>
+    <Condition Message="A current or newer version of this product is already installed on this machine.  Please use the Add/Remove control panel to manage this installation">
+      Installed Or Not KCAPLUGIN_CURRENT
+    </Condition>
 
     <!-- Custom actions -->
     <!-- nothing here yet -->

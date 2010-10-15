@@ -196,6 +196,9 @@
 
     <Upgrade Id="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
       <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.KCAPluginVersion)" MigrateFeatures="yes" Property="KCAPLUGIN_UPGRADE" />
+      <UpgradeVersion Minimum="$(var.KCAPluginVersion)" IncludeMinimum="yes"
+                      Maximum="127.127.32767.32767"
+                      OnlyDetect="yes" Property="KCAPLUGIN_CURRENT" />
     </Upgrade>
 
   </Fragment>
