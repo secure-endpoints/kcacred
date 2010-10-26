@@ -79,25 +79,17 @@
     <FeatureRef Id="Complete" />
 
     <!-- Product search -->
-    <Property Id="KFWVERSION">
-      <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="VersionString" Root="HKLM" Type="raw" />
-    </Property>
-    <Property Id="KFWVERSIONMAJOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_major" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MajorVersion" Root="HKLM" Type="raw" />
-    </Property>
-    <Property Id="KFWVERSIONMINOR">
-      <RegistrySearch Win64="$(var.Win64)" Id="rs_KfW_version_minor" Key="SOFTWARE\MIT\Kerberos\Client\CurrentVersion" Name="MinorVersion" Root="HKLM" Type="raw" />
-    </Property>
     <!-- Launch conditions -->
     <Condition Message="This product requires Windows 2000, Windows XP, Windows 2003 or newer operating system.">
         VersionNT And VersionNT &gt;= 500
     </Condition>
-    <Condition Message="This product requires Kerberos for Windows 3.1.0 or later to be installed">
-        Installed Or (KFWVERSION And KFWVERSIONMAJOR And (KFWVERSIONMAJOR &gt; "#3" Or (KFWVERSIONMAJOR = "#3" And KFWVERSIONMINOR &gt;= "#1")))
-    </Condition>
     <Condition Message="A current or newer version of this product is already installed on this machine.  Please use the Add/Remove control panel to manage this installation">
       Installed Or Not KCAPLUGIN_CURRENT
     </Condition>
+    <!-- We no longer search for Kerberos for Windows as a
+         pre-requisite for installing the KCA plug-in since we also
+         support Heimdal.  In addition, such a pre-requisite prevents
+         out-of-order installation of packages. -->
 
     <!-- Custom actions -->
     <!-- nothing here yet -->
