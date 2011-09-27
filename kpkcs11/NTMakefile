@@ -39,9 +39,9 @@ AUXCFLAGS = /J /Zc:wchar_t /Zc:forScope /Gd /GR /Gy /GL	/FD /EHsc /O2 /Wp64 /err
 
 !IFNDEF VERMAJOR
 VERMAJOR=0
-VERMINOR=5
+VERMINOR=6
 VERAUX  =0
-VERPATCH=2
+VERPATCH=0
 !ELSE
 # Check if we were given all the version info macros we need
 !  IF !DEFINED(VERMINOR) || !DEFINED(VERAUX) || !DEFINED(VERPATCH)
