@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2006-2010 Secure Endpoints Inc.
+# Copyright (c) 2006-2011 Secure Endpoints Inc.
 #
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -26,7 +26,7 @@
 #
 # (paths should not end in a backslash)
 #
-# HEIMDALSDKDIR : Path to the Kerberos for Windows SDK (version 3.1 or later)
+# KERBEROSCOMPATSDKROOT : Path to the Kerberos Compatibility SDK 1.0
 #
 # OPENSSLDIR: Path to installation of OpenSSL
 #
@@ -71,8 +71,8 @@ VERLISTD=$(VERMAJOR)-$(VERMINOR)-$(VERAUX)-$(VERPATCH)
 
 # Various checks
 
-!ifndef HEIMDALSDKDIR
-! error HEIMDALSDKDIR environment variable not set.
+!ifndef KERBEROSCOMPATSDKROOT
+! error KERBEROSCOMPATSDKROOT environment variable not set.
 !endif
 
 !ifndef OPENSSLDIR
@@ -119,15 +119,15 @@ OBJ=$(BUILDROOT)\obj\$(CPU)_$(BUILDTYPE)
 
 KPKCS11DEST=$(BUILDROOT)\kpkcs11\dest\$(CPU)_$(BUILDTYPE)
 
-HEIMDALINCDIR=$(HEIMDALSDKDIR)\inc
-HEIMDALLIBDIR=$(HEIMDALSDKDIR)\lib\$(CPU)
+KERBEROSINCDIR=$(KERBEROSCOMPATSDKROOT)\inc
+KERBEROSLIBDIR=$(KERBEROSCOMPATSDKROOT)\lib\$(CPU)
 
 !if exist("$(NIDMSDKDIR)\inc\netidmgr")
 NIDMINCDIR=$(NIDMSDKDIR)\inc\netidmgr
 NIDMLIBDIR=$(NIDMSDKDIR)\lib\$(CPU)
 !else
 NIDMINCDIR=$(NIDMSDKDIR)\inc
-NIDMLIBDIR=$(NIDMSDKDIR)
+NIDMLIBDIR=$(NIDMSDKDIR)\lib
 !endif
 
 !if "$(CPU)" == "AMD64"
@@ -187,7 +187,7 @@ HHC=-$(HHCFULLPATH)
 
 # Lots more macros
 
-incflags = -I"$(NIDMINCDIR)" -I"$(HEIMDALINCDIR)\krb5" -I"$(OPENSSLDIR)\inc32" -I"$(HEIMDALINCDIR)" -I"$(OBJ)" -I.
+incflags = -I"$(NIDMINCDIR)" -I"$(KERBEROSINCDIR)\krb5" -I"$(OPENSSLDIR)\inc32" -I"$(KERBEROSINCDIR)" -I"$(OBJ)" -I.
 rincflags = /i "$(NIDMINCDIR)" /i "$(OBJ)" /i .
 
 ldebug = $(ldebug) /DEBUG
@@ -225,7 +225,7 @@ MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
 {$(OBJ)}.c{$(OBJ)}.obj:
 	$(C2OBJ)
 
-{$(HEIMDALSDKDIR)\src}.c{$(OBJ)}.obj:
+{$(KERBEROSCOMPATSDKROOT)\src}.c{$(OBJ)}.obj:
 	$(C2OBJ)
 
 {}.rc{$(OBJ)}.res:
@@ -284,14 +284,14 @@ if exist "$@.manifest" $(RM) "$@.manifest"
 
 DLL=$(DEST)\$(DLLBASENAME).dll
 
-HEIMDALLIBS = \
-	"$(HEIMDALLIBDIR)\heimdal.lib"
+KERBEROSLIBS = \
+	"$(KERBEROSLIBDIR)\heimdal.lib"
 
 !if "$(CPU)" == "i386"
-HEIMDALLIBS = $(HEIMDALLIBS) \
+KERBEROSLIBS = $(KERBEROSLIBS) \
 	"$(NIDMLIBDIR)\nidmgr32.lib"		
 !else 
-HEIMDALLIBS = $(HEIMDALLIBS) \
+KERBEROSLIBS = $(KERBEROSLIBS) \
 	"$(NIDMLIBDIR)\nidmgr64.lib"
 !endif
 
@@ -306,7 +306,7 @@ LIBFILES= 					\
 	shell32.lib				\
 	"$(OPENSSLLIBDIR)\libeay32.lib"	\
 	"$(OPENSSLLIBDIR)\ssleay32.lib"        \
-        $(HEIMDALLIBS)
+        $(KERBEROSLIBS)
 
 OBJFILES= \
 	$(OBJ)\credacq.obj	\
@@ -482,7 +482,7 @@ $(OBJ)\kcaplugin-core.wixobj: installer\kcaplugin-core.wxs $(DLL) $(HELPFILE)
 	-dNetIDMgrVersion="$(NIDMVERSTR)" \
 	-dBinDir="$(DEST)" \
 	-dKPKCS11BinDir="$(KPKCS11DEST)" \
-	-dHeimdalRedistDir="$(HEIMDALSDKDIR)\redist\$(CPU)" \
+	-dKerberosRedistDir="$(KERBEROSCOMPATSDKROOT)\redist\$(CPU)" \
 	-out $@ installer\kcaplugin-core.wxs
 
 WIXLIB=$(DEST)\kcaplugin-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)-$(CPU)$(VERDEBUG).wixlib
@@ -514,7 +514,7 @@ TESTEXEOBJS=$(OBJ)\testmain.obj
 TESTSDKLIBS= \
         gdi32.lib       \
         user32.lib      \
-	$(HEIMDALLIBS) 	\
+	$(KERBEROSLIBS) 	\
 	"$(OPENSSLLIBDIR)\libeay32.lib"	\
 	$(DEST)\kcacred.lib
 

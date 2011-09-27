@@ -91,14 +91,14 @@ CPU = AMD64
 !if exist($(OPENSSLDIR)\out64)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out64
 !else
-OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
+#OPENSSLLIBDIR=$(OPENSSLDIR)\out64dll
 !endif
 !endif
 !if "$(CPU)" == "i386"
 !if exist($(OPENSSLDIR)\out32)
 OPENSSLLIBDIR=$(OPENSSLDIR)\out32
 !else
-OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
+#OPENSSLLIBDIR=$(OPENSSLDIR)\out32dll
 !endif
 !endif
 
