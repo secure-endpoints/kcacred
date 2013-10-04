@@ -26,7 +26,9 @@
 
 #include "credprov.h"
 #include "netidmgr_version.h"
+#ifdef BUILD_KRBCOMPAT
 #include "krbcompat_delayload.h"
+#endif
 #include<htmlhelp.h>
 #include<assert.h>
 
@@ -178,12 +180,14 @@ handle_kmsg_system(khm_int32 msg_type,
             khm_handle csp_plugin = NULL;
             khm_handle csp_plugins = NULL;
 
+#ifdef BUILD_KRBCOMPAT
             /* If we don't have a Kerberos backend, then we can't
              * function. */
             if (!DelayLoadHeimdal()) {
 		_reportf("Can't initialize a Kerberos backend.  LastError=%d", GetLastError());
                 return KHM_ERROR_NOT_FOUND;
             }
+#endif
 
 #if KH_VERSION_API < 12
 

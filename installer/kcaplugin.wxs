@@ -32,8 +32,24 @@
   <?define PIProgramFilesFolder="ProgramFilesFolder"?>
   <?endif ?>
 
-  <Product Id="*" Name="KCA Provider $(var.KCAPluginVersion) for NetIDMgr $(var.NetIDMgrVersion)" Language="1033" Version="$(var.KCAPluginVersion)" Manufacturer="Secure Endpoints Inc." UpgradeCode="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
-    <Package Description="Provider of KCA credential management to Network Identity Manager" InstallerVersion="200" Platform="$(var.Platform)" Compressed="yes" />
+  <Product Id="*"
+	Name="KCA Provider $(var.KCAPluginVersion) for NetIDMgr $(var.NetIDMgrVersion)"
+	Language="1033"
+	Version="$(var.KCAPluginVersion)"
+	Manufacturer="Secure Endpoints Inc."
+	UpgradeCode="F1DCF455-1C9E-4777-82E1-EAB9DF9E053F">
+
+    <Package Id="*"
+	AdminImage="no"
+	Compressed="yes"
+	Description="Provider of KCA credential management to Network Identity Manager"
+	InstallerVersion="200"
+	InstallScope="perMachine"
+	InstallPrivileges="elevated"
+	Keywords="Installer,NetIDMgr,KCA"
+	Manufacturer="Secure Endpoints Inc."
+	Platform="$(var.Platform)"
+	ShortNames="no" />
 
     <Media Id="1" Cabinet="Product.cab" EmbedCab="yes" CompressionLevel="high" />
 
@@ -102,7 +118,6 @@
       <!-- leave default -->
     </InstallUISequence>
 
-    <Property Id="ALLUSERS" Value="1" />
     <Property Id="ARPCONTACT" Value="kca@secure-endpoints.com" />
     <Property Id="ARPURLINFOABOUT" Value="https://www.secure-endpoints.com" />
     <Property Id="ARPURLUPDATEINFO" Value="https://www.secure-endpoints.com" />

@@ -33,7 +33,7 @@
 
 DLLBASENAME = kpkcs11
 
-AUXCFLAGS = /J /Zc:wchar_t /Zc:forScope /Gd /GR /Gy /GL	/FD /EHsc /O2 /Wp64 /errorReport:prompt
+AUXCFLAGS = /J /Zc:wchar_t /Zc:forScope /Gd /GR /Gy /GL	/FD /EHsc /O2 /errorReport:prompt
 
 # Version info
 
@@ -106,11 +106,26 @@ OPENSSLLIBDIR=$(OPENSSLDIR)\out32
 !error 'OPENSSLLIBDIR' cannot be determined.
 !endif
 
-# Note that DEST has to point to the same directory as KPKCS11DEST in
-# ../Makefile
+# Use the kcaplugin directives if available
 
+!ifdef KPKCS11BIN
+BINDIR=$(KPKCS11BIN)
+!else
+BINDIR=$(BUILDROOT)\dest\$(CPU)_$(BUILDTYPE)
+!endif
+!ifdef KPKCS11LIB
+LIBDIR=$(KPKCS11LIB)
+!else
+LIBDIR=$(BUILDROOT)\dest\$(CPU)_$(BUILDTYPE)
+!endif
+!ifdef KPKCS11OBJ
+OBJDIR=$(KPKCS11OBJ)
+!else
+OBJDIR=$(BUILDROOT)\obj\$(CPU)_$(BUILDTYPE)
+!endif
+!ifndef DEST
 DEST=$(BUILDROOT)\dest\$(CPU)_$(BUILDTYPE)
-OBJ=$(BUILDROOT)\obj\$(CPU)_$(BUILDTYPE)
+!endif
 
 # Win32.mak
 
@@ -129,8 +144,8 @@ MC=mc
 
 # Lots more macros
 
-incflags = -I"$(OPENSSLDIR)\inc32" -I"$(OBJ)" -I.
-rincflags = /i "$(OBJ)" /i .
+incflags = -I"$(OPENSSLDIR)\inc32" -I"$(OBJDIR)" -I.
+rincflags = /i "$(OBJDIR)" /i .
 
 ldebug = $(ldebug) /DEBUG
 cdebug = $(cdebug) -Os -Zi
@@ -142,37 +157,45 @@ cwarn=
 C2OBJ=$(CC) $(cvarsmt) $(cdebug) $(cflags) $(cwarn) $(incflags) $(cdefines) $(AUXCFLAGS)  /Fo"$@" /c $**
 
 !ifdef DEBUG
-DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) $(AUXLINKFLAGS) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /OPT:NOWIN98 /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) $(AUXLINKFLAGS) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" /IMPLIB:$(LIBDIR)\$(@B).lib $**
 !else
-DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) $(AUXLINKFLAGS) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /OPT:NOWIN98 /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" /IMPLIB:$(DEST)\$(@B).lib $**
+DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(baselibs) $(AUXLINKFLAGS) /LTCG /DELAY:UNLOAD /MANIFEST /OPT:REF /OPT:ICF /RELEASE /SUBSYSTEM:WINDOWS /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" /IMPLIB:$(LIBDIR)\$(@B).lib $**
 !endif
 
 DLLRESLINK=$(LINK) /NOLOGO /DLL /NOENTRY /MACHINE:$(PROCESSOR_ARCHITECTURE) /OUT:"$@" $**
 
 RC2RES=$(RC) $(RFLAGS) $(rincflags) /fo "$@" $**
 
-MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
+MC2RC=$(MC) $(MCFLAGS) -h "$(OBJDIR)\" -m 1024 -r "$(OBJDIR)\" -x "$(OBJDIR)\" $**
 
-{}.c{$(OBJ)}.obj:
+{}.c{$(OBJDIR)}.obj:
 	$(C2OBJ)
 
-{$(OBJ)}.c{$(OBJ)}.obj:
+{$(OBJDIR)}.c{$(OBJDIR)}.obj:
 	$(C2OBJ)
 
-{}.rc{$(OBJ)}.res:
+{}.rc{$(OBJDIR)}.res:
 	$(RC2RES)
 
 mkdirs::
 !if !exist($(DEST))
 	$(MKDIR) "$(DEST)"
 !endif
-!if !exist($(OBJ))
-	$(MKDIR) "$(OBJ)"
+!if !exist($(BINDIR))
+	$(MKDIR) "$(BINDIR)"
+!endif
+!if !exist($(LIBDIR))
+	-$(MKDIR) "$(LIBDIR)"
+!endif
+!if !exist($(OBJDIR))
+	$(MKDIR) "$(OBJDIR)"
 !endif
 
 clean::
-	-$(RM) "$(OBJ)\*.*"
+	-$(RM) "$(OBJDIR)\*.*"
 	-$(RM) "$(DEST)\*.*"
+	-$(RM) "$(BINDIR)\*.*"
+	-$(RM) "$(LIBDIR)\*.*"
         -$(RM) "*.pdb"
 
 .SUFFIXES: .h
@@ -215,9 +238,9 @@ SIGNTOOL=signtool.exe
 !ENDIF
 
 !IF DEFINED(CODESIGN_DESC) && DEFINED(CODESIGN_URL) && DEFINED(CODESIGN_TIMESTAMP)
-CODESIGN_USERLAND= "$(SIGNTOOL)" sign /a /d "$(CODESIGN_DESC)" /du $(CODESIGN_URL) /t $(CODESIGN_TIMESTAMP) /v $@
+CODESIGN= "$(SIGNTOOL)" sign /a /d "$(CODESIGN_DESC)" /du $(CODESIGN_URL) /t $(CODESIGN_TIMESTAMP) /v $@
 !ELSE
-CODESIGN_USERLAND=
+CODESIGN=
 !ENDIF
 
 !IF DEFINED(SYMSTORE_EXE) && DEFINED(SYMSTORE_ROOT)
@@ -225,14 +248,14 @@ CODESIGN_USERLAND=
 SYMSTORE_COMMENT = |$(SYMSTORE_COMMENT)
 !ENDIF
 SYMSTORE_IMPORT= \
-$(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "KCA PKCS#11 Module" /v "$(VERLISTD)" /c "$(@F)$(SYMSTORE_COMMENT)" /f $*.*
+$(SYMSTORE_EXE) add /s $(SYMSTORE_ROOT) /t "KCA PKCS11 Module" /v "$(VERLISTD)" /c "$(@F)$(SYMSTORE_COMMENT)" /f $*.*
 !ELSE
 SYMSTORE_IMPORT=
 !ENDIF
 
 # Now for the actual build stuff
 
-DLL=$(DEST)\$(DLLBASENAME).dll
+DLL=$(BINDIR)\$(DLLBASENAME).dll
 
 LIBFILES= 					\
 	user32.lib \
@@ -241,27 +264,27 @@ LIBFILES= 					\
 	"$(OPENSSLLIBDIR)\libeay32.lib" 
 
 OBJFILES= \
-	$(OBJ)\b64.obj	\
-	$(OBJ)\blob_to_rsa.obj	\
-	$(OBJ)\cki_dup.obj		\
-	$(OBJ)\cki_err.obj	\
-	$(OBJ)\cki_funcs.obj	\
-	$(OBJ)\cki_globals.obj	\
-	$(OBJ)\cki_new_free.obj	\
-	$(OBJ)\cki_objs.obj	\
-	$(OBJ)\cki_ssleay.obj \
-	$(OBJ)\concat.obj \
-	$(OBJ)\cu_util.obj \
-	$(OBJ)\debug.obj \
-	$(OBJ)\doauth.obj \
-	$(OBJ)\pkcs11_evp_funcs.obj \
-	$(OBJ)\pkcs11_funcs.obj \
-	$(OBJ)\pkcs11_globals.obj \
-	$(OBJ)\pkcs11_new_free.obj
+	$(OBJDIR)\b64.obj	\
+	$(OBJDIR)\blob_to_rsa.obj	\
+	$(OBJDIR)\cki_dup.obj		\
+	$(OBJDIR)\cki_err.obj	\
+	$(OBJDIR)\cki_funcs.obj	\
+	$(OBJDIR)\cki_globals.obj	\
+	$(OBJDIR)\cki_new_free.obj	\
+	$(OBJDIR)\cki_objs.obj	\
+	$(OBJDIR)\cki_ssleay.obj \
+	$(OBJDIR)\concat.obj \
+	$(OBJDIR)\cu_util.obj \
+	$(OBJDIR)\debug.obj \
+	$(OBJDIR)\doauth.obj \
+	$(OBJDIR)\pkcs11_evp_funcs.obj \
+	$(OBJDIR)\pkcs11_funcs.obj \
+	$(OBJDIR)\pkcs11_globals.obj \
+	$(OBJDIR)\pkcs11_new_free.obj
 
-DLLRESFILE=$(OBJ)\version.res
+DLLRESFILE=$(OBJDIR)\version.res
 
-CONFIGHEADER=$(OBJ)\pkcs_config.h
+CONFIGHEADER=$(OBJDIR)\pkcs_config.h
 
 all: mkdirs $(CONFIGHEADER) $(DLL) 
 
@@ -289,7 +312,8 @@ $(DLL): $(OBJFILES) $(DLLRESFILE)
 	$(DLLGUILINK) $(LIBFILES)
 	$(_VC_MANIFEST_EMBED_DLL)
 	$(_VC_MANIFEST_CLEAN)
-        $(CODESIGN_USERLAND)
+	$(CODESIGN)
+	$(SYMSTORE_IMPORT)
 
 clean::
 	-$(RM) $(DLL)
@@ -308,13 +332,13 @@ MSIFILE=$(DEST)\kpkcs11-$(VERMAJOR)_$(VERMINOR)_$(VERAUX)_$(VERPATCH)$(VERDEBUG)
 
 msi: $(MSIFILE)
 
-$(MSIFILE): $(OBJ)\kpkcs11.wixobj
+$(MSIFILE): $(OBJDIR)\kpkcs11.wixobj
 	light -v0 -out $@ $**
 
 $(OBJ)\kpkcs11.wixobj: installer\kpkcs11.wxs $(DLL)
 	candle -v0 \
 	-dKPKCS11Version="$(VERLIST)" \
-	-dBinDir="$(DEST)" \
+	-dBinDir="$(BINDIR)" \
 	-out $@ installer\kpkcs11.wxs
 
 clean::

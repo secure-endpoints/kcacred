@@ -10,6 +10,9 @@
   <?ifndef BinDir?>
   <?error BinDir not defined. ?>
   <?endif ?>
+  <?ifndef DocDir?>
+  <?error DocDir not defined. ?>
+  <?endif ?>
   <?ifndef KPKCS11BinDir?>
   <?error KPKCS11BinDir not defined ?>
   <?endif ?>
@@ -90,13 +93,13 @@
 
       <Component Id="_kcacreds_plugin" Win64="$(var.Win64)" Guid="$(var._kcacreds_plugin_guid)" DiskId="1">
         <File Id="file_kcacred_dll" Name="kcacred.dll" KeyPath="yes" />
-        <RegistryKey Id="reg_mod_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Action="createAndRemoveOnUninstall" />
+	<RegistryKey Id="reg_mod_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" ForceDeleteOnUninstall="yes" />
         <RegistryValue Id="reg_mod_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Type="string" Value="" />
         <RegistryValue Id="reg_mod_03" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="ImagePath" Type="string" Value="[#file_kcacred_dll]" />
         <RegistryValue Id="reg_mod_04" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="Description" Type="string" Value="KCA Credentials Provider Module" />
         <RegistryValue Id="reg_mod_05" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="Vendor" Type="string" Value="Secure Endpoints Inc." />
         <RegistryValue Id="reg_mod_06" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Modules\KCAMod" Name="PluginList" Type="string" Value="KCACred" />
-        <RegistryKey Id="reg_plg_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Action="createAndRemoveOnUninstall" />
+	<RegistryKey Id="reg_plg_01" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" ForceDeleteOnUninstall="yes" />
         <RegistryValue Id="reg_plg_02" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Type="string" Value="" />
         <RegistryValue Id="reg_plg_03" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Module" Type="string" Value="KCAMod" />
         <RegistryValue Id="reg_plg_04" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred" Name="Description" Type="string" Value="AFS Credentials Provider" />
@@ -107,7 +110,7 @@
       <Component Id="_custom_realm_map" Win64="$(var.Win64)" Guid="CC38D11A-C592-40FA-A740-D3C9075C2503">
         <Condition>KCAREALMMAPFROM And KCAREALMMAPTO</Condition>
         <RegistryValue Id="reg_crm_0" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" KeyPath="yes" Type="string" Value="" />
-        <RegistryKey Id="reg_crm_1" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Action="createAndRemoveOnUninstall" />
+	<RegistryKey Id="reg_crm_1" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" ForceDeleteOnUninstall="yes" />
         <RegistryValue Id="reg_crm_2" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCAEnabled" Type="integer" Value="1" />
         <RegistryValue Id="reg_crm_3" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCAHostMethod" Type="integer" Value="2" />
         <RegistryValue Id="reg_crm_4" Root="HKLM" Key="SOFTWARE\MIT\NetIDMgr\PluginManager\Plugins\KCACred\Realms\[KCAREALMMAPFROM]" Name="KCARealm" Type="string" Value="[KCAREALMMAPTO]" />
@@ -117,7 +120,7 @@
         <File Id="file_kcacred_pdb" Name="kcacred.pdb" KeyPath="yes" />
       </Component>
       <Component Id="_kcaplugin_chm" Guid="59E851AA-AE0D-4683-BE91-2A3EBA65535F" DiskId="1">
-        <File Id="file_kcaplhlp_chm" ShortName="kcaplgin.chm" Name="kcaplugin.chm" KeyPath="yes" />
+	<File Id="file_kcaplhlp_chm" ShortName="kcaplgin.chm" Name="kcaplugin.chm" Source="$(var.DocDir)\kcaplugin.chm" KeyPath="yes" />
       </Component>
 
       <Component Id="_kpkcs11_plugin" Win64="$(var.Win64)" Guid="$(var._kpkcs11_plugin_guid)" DiskId="1">
@@ -125,7 +128,15 @@
       </Component>
 
       <!-- Kerberos Compatibility -->
-      <Merge Id="KerberosCompat" Language="0" SourceFile="$(var.KerberosRedistDir)\SecureEndpoints-krbcompat.msm" DiskId="1" />
+      <?ifdef KerberosRedistDir ?>
+	<?ifdef UseKrbCompat ?>
+	   <Merge Id="mergeKrbCompat" Language="0" DiskId="1"
+	      SourceFile="$(var.KerberosRedistDir)\SecureEndpoints-krbcompat.msm" />
+	<?else ?>
+	   <Merge Id="mergeHeimdal" Language="0" DiskId="1"
+	      SourceFile="$(var.KerberosRedistDir)\Heimdal.msm" />
+	<?endif ?>
+      <?endif ?>
 
       <?if $(var.Platform) = "x86" ?>
       <?ifndef NOMODUTIL?>
@@ -171,15 +182,21 @@
       <ComponentRef Id="_kcacreds_en_us" />
       <ComponentRef Id="_kcaplugin_chm" />
       <ComponentRef Id="_custom_realm_map" />
-      <MergeRef Id="KerberosCompat" />
-      <Feature Id="DebugSyms" Title="Debug Symbols" Level="100">
+      <?ifdef KerberosRedistDir ?>
+	<?ifdef UseKrbCompat ?>
+	   <MergeRef Id="mergeKrbCompat" />
+	<?else ?>
+	   <MergeRef Id="mergeHeimdal" />
+	<?endif ?>
+      <?endif ?>
+      <Feature Id="DebugSyms" Title="Debug Symbols" Level="5">
         <ComponentRef Id="_kcacreds_debugsym" />
       </Feature>
-      <Feature Id="KPKCS11Plugin" Title="PKCS #11 Plugin for Security Certificates" Description="Exposes the Windows certificate store for use by the Mozilla family of products." Level="1">
+      <Feature Id="KPKCS11Plugin" Title="PKCS #11 Plugin for Security Certificates" Description="Exposes the Windows certificate store for use by the Mozilla family of products." Level="3">
         <ComponentRef Id="_kpkcs11_plugin" />
         <?if $(var.Platform) = "x86" ?>
         <?ifndef NOMODUTIL?>
-        <Feature Id="Modutil" Title="Mozilla Security Module Database Tool" Description="Command-line utility for managing PKCS #1 modules for the Mozilla family of products.  Can be used to install the PKCS #11 Plugin for security certificates." Level="60">
+	<Feature Id="Modutil" Title="Mozilla Security Module Database Tool" Description="Command-line utility for managing PKCS #1 modules for the Mozilla family of products.  Can be used to install the PKCS #11 Plugin for security certificates." Level="3">
           <ComponentRef Id="_modutil_exe" />
           <ComponentRef Id="_smime3_dll" />
           <ComponentRef Id="_softokn3_dll" />
