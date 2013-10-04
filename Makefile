@@ -188,7 +188,7 @@ DLLBASENAME=kcacred
 # TODO: Change the version numbers
 VERMAJOR=2
 VERMINOR=5
-VERAUX  =4
+VERAUX  =5
 VERPATCH=0
 
 # Target NetIDMgr version (string) only for display purposes

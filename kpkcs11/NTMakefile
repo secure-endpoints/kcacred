@@ -38,8 +38,8 @@ AUXCFLAGS = /J /Zc:wchar_t /Zc:forScope /Gd /GR /Gy /GL	/FD /EHsc /O2 /errorRepo
 # Version info
 
 !IFNDEF VERMAJOR
-VERMAJOR=0
-VERMINOR=6
+VERMAJOR=1
+VERMINOR=0
 VERAUX  =0
 VERPATCH=0
 !ELSE
