@@ -93,7 +93,7 @@ ECHO=echo
 CP=copy /y
 LINK=link
 MC=mc
-HHC=-$(HHCFULLPATH)
+HHC=$(HHCFULLPATH)
 
 !ifdef DEBUG
 DLLGUILINK=$(LINK) /NOLOGO $(ldebug) $(dlllflags) $(guilibsmt) $(AUXLINKFLAGS) /OUT:"$@" /IMPLIB:$(DEST)\lib\$(@B).lib $**
@@ -128,7 +128,7 @@ MC2RC=$(MC) $(MCFLAGS) -h "$(OBJ)\" -m 1024 -r "$(OBJ)\" -x "$(OBJ)\" $**
 
 mkdirs::
 !if !exist($(DEST))
-	$(MKDIR) "$(DEST)"
+	-$(MKDIR) "$(DEST)"
 !endif
 !if !exist($(DEST)\bin)
 	-$(MKDIR) "$(DEST)\bin"
@@ -137,7 +137,7 @@ mkdirs::
 	-$(MKDIR) "$(DEST)\lib"
 !endif
 !if !exist($(OBJ))
-	$(MKDIR) "$(OBJ)"
+	-$(MKDIR) "$(OBJ)"
 !endif
 
 clean::
@@ -395,7 +395,7 @@ $(HELPFILE): help\kcaplugin.chm
 	$(CP) $** $@
 
 help\kcaplugin.chm: help\kcaplugin.hhp
-	$(HHC) help\kcaplugin.hhp
+	-$(HHC) help\kcaplugin.hhp
 
 clean::
         -$(RM) $(HELPFILE)
